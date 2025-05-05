@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/mario-andreschak-mcp-abap-abap-adt-api-badge.png)](https://mseep.ai/app/mario-andreschak-mcp-abap-abap-adt-api)
+
 DISCLAIMER: This server is still in experimental status! Use it with caution!
 
 # ABAP-ADT-API MCP-Server

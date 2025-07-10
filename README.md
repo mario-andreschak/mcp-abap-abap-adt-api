@@ -148,8 +148,10 @@ This server provides tools for interacting with an SAP system via ADT (ABAP Deve
 *   **`activate`:** Activates an ABAP object. (See notes below on activation/unlocking.)
     *    `object`: The object to be activated.
 
-*   **`getObjectSource`:** Retrieves the source code of an ABAP object.
+*   **`getObjectSource`:** Retrieves the source code of an ABAP object. In case the number of tokens exeeds the limits, `discardLines` and `maxLines` can be combined to apply pagination.
     *   `objectSourceUrl`: (string, required) The object's URI *with the suffix `/source/main`*.
+    *   `discardLines`: (number, optional) Lines to be discarded from the begining.
+    *   `maxLines`: (number, optional) maximum number of lines to be retrieved.
 
 **Workflow for Modifying ABAP Code:**
 

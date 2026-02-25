@@ -101,7 +101,7 @@ export class AbapAdtServer extends Server {
       );
       console.error('[MCP] Using XSUAA OAuth 2.0 authentication');
     } else {
-      // Basic authentication (legacy mode)
+      // Basic authentication
       this.adtClient = new ADTClient(
         authConfig.sapUrl,
         authConfig.username as string,

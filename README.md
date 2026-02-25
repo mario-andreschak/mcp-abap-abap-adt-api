@@ -56,17 +56,46 @@ npx -y @smithery/cli install @mario-andreschak/mcp-abap-abap-adt-api --client cl
       cp .env.example .env
       ```
 
-   b. Open the `.env` file and replace the placeholder values with your actual SAP connection details:
+   b. Configure authentication based on your SAP system type:
 
-      ```env
-      SAP_URL=https://your-sap-server.com:44300
-      SAP_USER=YOUR_SAP_USERNAME
-      SAP_PASSWORD=YOUR_SAP_PASSWORD
-      SAP_CLIENT=YOUR_SAP_CLIENT
-      SAP_LANGUAGE=YOUR_SAP_LANGUAGE
-      ```
+   ### Option A: Basic Authentication (Traditional ABAP Systems)
+
+   For traditional on-premise or non-BTP ABAP systems:
+
+   ```env
+   SAP_URL=https://your-sap-server.com:44300
+   SAP_USER=YOUR_SAP_USERNAME
+   SAP_PASSWORD=YOUR_SAP_PASSWORD
+   SAP_CLIENT=YOUR_SAP_CLIENT
+   SAP_LANGUAGE=YOUR_SAP_LANGUAGE
+   ```
 
    Note: The SAP_CLIENT and SAP_LANGUAGE variables are optional but recommended.
+
+   ### Option B: XSUAA Authentication (SAP BTP ABAP Cloud)
+
+   For SAP BTP ABAP Cloud systems, you can use OAuth 2.0 authentication with a service key:
+
+   1. **Obtain Service Key from SAP BTP Cockpit**:
+      - Navigate to your ABAP environment in BTP Cockpit
+      - Create a service key for your ABAP instance
+      - Download or copy the service key JSON
+
+   2. **Save the service key**:
+      - Save it as `servicekey.json` in the project root directory, OR
+      - Set the path in your `.env` file
+
+   3. **Configure `.env` file**:
+      ```env
+      # Path to your service key file
+      SERVICE_KEY_PATH=./servicekey.json
+
+      # Optional: Client and Language
+      SAP_CLIENT=
+      SAP_LANGUAGE=EN
+      ```
+
+   ### Additional Configuration
 
    If you're using self-signed certificates, you can also set:
 
@@ -74,7 +103,10 @@ npx -y @smithery/cli install @mario-andreschak/mcp-abap-abap-adt-api --client cl
    NODE_TLS_REJECT_UNAUTHORIZED="0"
    ```
 
-   IMPORTANT: Never commit your `.env` file to version control. It's already included in `.gitignore` to prevent accidental commits.
+   **IMPORTANT**:
+   - Never commit your `.env` file or `servicekey.json` to version control
+   - These files are already included in `.gitignore` to prevent accidental commits
+   - The server automatically detects which authentication mode to use based on your configuration
 
 4. **Build the Project**
 

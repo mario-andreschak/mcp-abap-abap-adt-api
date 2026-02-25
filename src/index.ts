@@ -11,6 +11,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { ADTClient, session_types } from "abap-adt-api";
 import path from 'path';
+import { loadAuthConfig } from './lib/config.js';
+import { XsuaaAuthProvider } from './lib/XsuaaAuthProvider.js';
 import { AuthHandlers } from './handlers/AuthHandlers.js';
 import { TransportHandlers } from './handlers/TransportHandlers.js';
 import { ObjectHandlers } from './handlers/ObjectHandlers.js';
@@ -80,18 +82,36 @@ export class AbapAdtServer extends Server {
       }
     );
 
-    const missingVars = ['SAP_URL', 'SAP_USER', 'SAP_PASSWORD'].filter(v => !process.env[v]);
-    if (missingVars.length > 0) {
-      throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+    // Load authentication configuration (auto-detects mode)
+    const authConfig = loadAuthConfig();
+    console.error(`[MCP] Authentication mode: ${authConfig.mode}`);
+
+    if (authConfig.mode === 'xsuaa' && authConfig.xsuaa) {
+      // XSUAA OAuth 2.0 authentication
+      const xsuaaProvider = new XsuaaAuthProvider(authConfig.xsuaa);
+
+      // Create ADT client with bearer token fetcher
+      // Note: ADTClient requires a username for validation, but it won't be used with OAuth
+      this.adtClient = new ADTClient(
+        authConfig.sapUrl,
+        'oauth', // Placeholder username (required by ADTClient but not used with OAuth)
+        async () => await xsuaaProvider.getToken(), // BearerFetcher
+        authConfig.sapClient as string,
+        authConfig.sapLanguage as string
+      );
+      console.error('[MCP] Using XSUAA OAuth 2.0 authentication');
+    } else {
+      // Basic authentication
+      this.adtClient = new ADTClient(
+        authConfig.sapUrl,
+        authConfig.username as string,
+        authConfig.password as string,
+        authConfig.sapClient as string,
+        authConfig.sapLanguage as string
+      );
+      console.error('[MCP] Using basic authentication');
     }
-    
-    this.adtClient = new ADTClient(
-      process.env.SAP_URL as string,
-      process.env.SAP_USER as string,
-      process.env.SAP_PASSWORD as string,
-      process.env.SAP_CLIENT as string,
-      process.env.SAP_LANGUAGE as string
-    );
+
     this.adtClient.stateful = session_types.stateful
     
     // Initialize handlers

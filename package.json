@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.4.1",
+    "@sap/xssec": "^4.12.2",
     "@types/node": "^22.10.10",
     "abap-adt-api": "^6.2.0",
     "dotenv": "^16.4.7",

@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler';
 import type { ToolDefinition } from '../types/tools';
+import { session_types } from 'abap-adt-api';
 
 export class ObjectSourceHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -71,9 +72,12 @@ export class ObjectSourceHandlers extends BaseHandler {
     }
   }
 
-  async handleSetObjectSource(args: any): Promise<any> {    
+  async handleSetObjectSource(args: any): Promise<any> {
     const startTime = performance.now();
     try {
+      // Library auto-resets stateful=stateless on dropSession/logout. Restore here
+      // so write operations get the correct X-sap-adt-sessiontype header.
+      this.adtclient.stateful = session_types.stateful;
       await this.adtclient.setObjectSource(
         args.objectSourceUrl,
         args.source,

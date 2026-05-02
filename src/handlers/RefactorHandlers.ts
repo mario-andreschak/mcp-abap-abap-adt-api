@@ -71,7 +71,8 @@ export class RefactorHandlers extends BaseHandler {
     async handleExtractMethodEvaluate(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodEvaluate(args.uri, args.range);
+            const range = typeof args.range === 'string' ? JSON.parse(args.range) : args.range;
+            const result = await this.adtclient.extractMethodEvaluate(args.uri, range);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -96,7 +97,8 @@ export class RefactorHandlers extends BaseHandler {
     async handleExtractMethodPreview(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodPreview(args.proposal);
+            const proposal = typeof args.proposal === 'string' ? JSON.parse(args.proposal) : args.proposal;
+            const result = await this.adtclient.extractMethodPreview(proposal);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -121,7 +123,8 @@ export class RefactorHandlers extends BaseHandler {
     async handleExtractMethodExecute(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodExecute(args.refactoring);
+            const refactoring = typeof args.refactoring === 'string' ? JSON.parse(args.refactoring) : args.refactoring;
+            const result = await this.adtclient.extractMethodExecute(refactoring);
             this.trackRequest(startTime, true);
             return {
                 content: [

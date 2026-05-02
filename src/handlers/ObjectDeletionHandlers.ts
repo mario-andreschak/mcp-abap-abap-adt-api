@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { ADTClient } from "abap-adt-api";
+import { ADTClient, session_types } from "abap-adt-api";
 
 export class ObjectDeletionHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -44,6 +44,7 @@ export class ObjectDeletionHandlers extends BaseHandler {
   async handleDeleteObject(args: any): Promise<any> {
     const startTime = performance.now();
     try {
+      this.adtclient.stateful = session_types.stateful;
       const result = await this.adtclient.deleteObject(
         args.objectUrl,
         args.lockHandle,

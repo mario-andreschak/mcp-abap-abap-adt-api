@@ -128,10 +128,18 @@ export class AbapAdtServer extends Server {
 
   private serializeResult(result: any) {
     try {
+      // Handlers already return a well-formed MCP tool result
+      // ({ content: [...] }). Re-wrapping it would double-serialize the payload
+      // (every quote in the data gets escaped again), needlessly inflating large
+      // responses such as object source (issue #4). Pass those through as-is and
+      // only wrap raw values (e.g. the healthcheck object).
+      if (result && Array.isArray(result.content)) {
+        return result;
+      }
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify(result, (key, value) => 
+          text: JSON.stringify(result, (key, value) =>
             typeof value === 'bigint' ? value.toString() : value
           )
         }]

@@ -13,6 +13,8 @@ export class ObjectSourceHandlers extends BaseHandler {
           type: 'object',
           properties: {
             objectSourceUrl: { type: 'string' },
+            discardLines: { type: 'number', optional: true },
+            maxLines: { type: 'number', optional: true },
             options: { type: 'string' }
           },
           required: ['objectSourceUrl']
@@ -51,6 +53,22 @@ export class ObjectSourceHandlers extends BaseHandler {
     const startTime = performance.now();
     try {
       const source = await this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+
+      const { maxLines, discardLines }: { maxLines: number, discardLines: number } = args
+
+      let sourcePage: string
+
+      if ( maxLines || discardLines ){
+        const newLine = '\n'
+        sourcePage =
+          source
+            .split(newLine)
+            .slice(discardLines, maxLines ? maxLines + discardLines : undefined)
+            .join(newLine)
+      } else {
+        sourcePage = source
+      }
+
       this.trackRequest(startTime, true);
       return {
         content: [
@@ -58,7 +76,7 @@ export class ObjectSourceHandlers extends BaseHandler {
             type: 'text',
             text: JSON.stringify({
               status: 'success',
-              source
+              sourcePage
             })
           }
         ]

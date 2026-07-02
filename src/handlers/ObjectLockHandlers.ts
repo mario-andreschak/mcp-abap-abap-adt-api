@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
-import { ADTClient } from "abap-adt-api";
+import { ADTClient, session_types } from "abap-adt-api";
 
 export class ObjectLockHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -56,6 +56,8 @@ export class ObjectLockHandlers extends BaseHandler {
   async handleLock(args: any): Promise<any> {
     const startTime = performance.now();
     try {
+      // dropSession/logout reset the client to stateless; locks require a stateful session
+      this.adtclient.stateful = session_types.stateful;
       const lockResult = await this.adtclient.lock(args.objectUrl, args.accessMode);
       this.trackRequest(startTime, true);
       return {
@@ -82,6 +84,8 @@ export class ObjectLockHandlers extends BaseHandler {
   async handleUnlock(args: any): Promise<any> {
     const startTime = performance.now();
     try {
+      // dropSession/logout reset the client to stateless; locks require a stateful session
+      this.adtclient.stateful = session_types.stateful;
       await this.adtclient.unLock(args.objectUrl, args.lockHandle);
       this.trackRequest(startTime, true);
       return {

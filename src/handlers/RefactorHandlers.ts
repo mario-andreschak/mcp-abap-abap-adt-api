@@ -18,7 +18,7 @@ export class RefactorHandlers extends BaseHandler {
                         },
                         range: {
                             type: 'string',
-                            description: 'The range to extract.'
+                            description: 'The range to extract, as a JSON string, e.g. {"start":{"line":1,"column":0},"end":{"line":5,"column":10}}'
                         }
                     },
                     required: ['uri', 'range']
@@ -32,7 +32,7 @@ export class RefactorHandlers extends BaseHandler {
                     properties: {
                         proposal: {
                             type: 'string',
-                            description: 'The extract method proposal.'
+                            description: 'The extract method proposal returned by extractMethodEvaluate, as a JSON string.'
                         }
                     },
                     required: ['proposal']
@@ -46,7 +46,7 @@ export class RefactorHandlers extends BaseHandler {
                     properties: {
                         refactoring: {
                             type: 'string',
-                            description: 'The refactoring object.'
+                            description: 'The refactoring returned by extractMethodPreview, as a JSON string.'
                         }
                     },
                     required: ['refactoring']
@@ -68,10 +68,22 @@ export class RefactorHandlers extends BaseHandler {
         }
     }
 
+    // Schemas declare these params as JSON strings, but the abap-adt-api methods
+    // expect deserialized objects; also accept plain objects for forward compatibility
+    private parseObjectArg<T>(value: unknown, name: string): T {
+        if (typeof value !== 'string') return value as T;
+        try {
+            return JSON.parse(value) as T;
+        } catch {
+            throw new McpError(ErrorCode.InvalidParams, `Parameter '${name}' is not valid JSON`);
+        }
+    }
+
     async handleExtractMethodEvaluate(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodEvaluate(args.uri, args.range);
+            const range = this.parseObjectArg<Range>(args.range, 'range');
+            const result = await this.adtclient.extractMethodEvaluate(args.uri, range);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -96,7 +108,8 @@ export class RefactorHandlers extends BaseHandler {
     async handleExtractMethodPreview(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodPreview(args.proposal);
+            const proposal = this.parseObjectArg<ExtractMethodProposal>(args.proposal, 'proposal');
+            const result = await this.adtclient.extractMethodPreview(proposal);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -121,7 +134,8 @@ export class RefactorHandlers extends BaseHandler {
     async handleExtractMethodExecute(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.extractMethodExecute(args.refactoring);
+            const refactoring = this.parseObjectArg<GenericRefactoring>(args.refactoring, 'refactoring');
+            const result = await this.adtclient.extractMethodExecute(refactoring);
             this.trackRequest(startTime, true);
             return {
                 content: [

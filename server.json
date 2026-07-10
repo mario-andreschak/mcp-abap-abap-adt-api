@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mario-andreschak/mcp-abap-abap-adt-api",
-  "description": "MCP server wrapping abap-adt-api for full ABAP ADT development workflows (object CRUD, transports, locking, syntax check, activation) against SAP systems",
+  "description": "MCP server wrapping abap-adt-api for ABAP ADT development workflows against SAP systems",
   "version": "0.1.1",
   "repository": {
     "url": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api",

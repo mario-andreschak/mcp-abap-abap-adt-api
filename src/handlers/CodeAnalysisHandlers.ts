@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from 'abap-adt-api';
+import { readFile } from 'fs/promises';
 import { sourceCache } from '../lib/sourceCache.js';
 
 export class CodeAnalysisHandlers extends BaseHandler {
@@ -9,14 +10,18 @@ export class CodeAnalysisHandlers extends BaseHandler {
         return [
             {
                 name: 'syntaxCheckCode',
-                description: 'Perform ABAP syntax check. Provide the source in "code", or omit it to reuse the source last read/written for "url" via getObjectSource/setObjectSource (cached this session).',
+                description: 'Perform ABAP syntax check. Provide the source in "code" (or "filePath" for large files), or omit it to reuse the source last read/written for "url" via getObjectSource/setObjectSource (cached this session).',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         code: {
                             type: 'string',
-                            description: 'The ABAP source to check. Optional if the source for "url" was already read or written this session.',
+                            description: 'Source code content (for small files - will be included in context). Optional if the source for "url" was already read or written this session.',
                             optional: true
+                        },
+                        filePath: {
+                            type: 'string',
+                            description: 'Local file path to read source from (for large files - bypasses context)'
                         },
                         url: { type: 'string', optional: true },
                         mainUrl: { type: 'string', optional: true },
@@ -37,20 +42,21 @@ export class CodeAnalysisHandlers extends BaseHandler {
                     required: ['cdsUrl']
                 }
             },
-            {
-                name: 'codeCompletion',
-                description: 'Get code completion suggestions',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        sourceUrl: { type: 'string' },
-                        source: { type: 'string' },
-                        line: { type: 'number' },
-                        column: { type: 'number' }
-                    },
-                    required: ['sourceUrl', 'source', 'line', 'column']
-                }
-            },
+            // Code completion tools (commented out - not useful for MCP server)
+            // {
+            //     name: 'codeCompletion',
+            //     description: 'Get code completion suggestions',
+            //     inputSchema: {
+            //         type: 'object',
+            //         properties: {
+            //             sourceUrl: { type: 'string' },
+            //             source: { type: 'string' },
+            //             line: { type: 'number' },
+            //             column: { type: 'number' }
+            //         },
+            //         required: ['sourceUrl', 'source', 'line', 'column']
+            //     }
+            // },
             {
                 name: 'findDefinition',
                 description: 'Find symbol definition',
@@ -89,21 +95,21 @@ export class CodeAnalysisHandlers extends BaseHandler {
                     properties: {}
                 }
             },
-            {
-                name: 'codeCompletionFull',
-                description: 'Performs full code completion.',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        sourceUrl: { type: 'string' },
-                        source: { type: 'string' },
-                        line: { type: 'number' },
-                        column: { type: 'number' },
-                        patternKey: { type: 'string' }
-                    },
-                    required: ['sourceUrl', 'source', 'line', 'column', 'patternKey']
-                }
-            },
+            // {
+            //     name: 'codeCompletionFull',
+            //     description: 'Performs full code completion.',
+            //     inputSchema: {
+            //         type: 'object',
+            //         properties: {
+            //             sourceUrl: { type: 'string' },
+            //             source: { type: 'string' },
+            //             line: { type: 'number' },
+            //             column: { type: 'number' },
+            //             patternKey: { type: 'string' }
+            //         },
+            //         required: ['sourceUrl', 'source', 'line', 'column', 'patternKey']
+            //     }
+            // },
             {
                 name: 'runClass',
                 description: 'Runs a class.',
@@ -115,20 +121,20 @@ export class CodeAnalysisHandlers extends BaseHandler {
                     required: ['className']
                 }
             },
-            {
-                name: 'codeCompletionElement',
-                description: 'Retrieves code completion element information.',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        sourceUrl: { type: 'string' },
-                        source: { type: 'string' },
-                        line: { type: 'number' },
-                        column: { type: 'number' }
-                    },
-                    required: ['sourceUrl', 'source', 'line', 'column']
-                }
-            },
+            // {
+            //     name: 'codeCompletionElement',
+            //     description: 'Retrieves code completion element information.',
+            //     inputSchema: {
+            //         type: 'object',
+            //         properties: {
+            //             sourceUrl: { type: 'string' },
+            //             source: { type: 'string' },
+            //             line: { type: 'number' },
+            //             column: { type: 'number' }
+            //         },
+            //         required: ['sourceUrl', 'source', 'line', 'column']
+            //     }
+            // },
             {
                 name: 'usageReferenceSnippets',
                 description: 'Retrieves usage reference snippets.',
@@ -203,20 +209,20 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 return this.handleSyntaxCheckCode(args);
             case 'syntaxCheckCdsUrl':
                 return this.handleSyntaxCheckCdsUrl(args);
-            case 'codeCompletion':
-                return this.handleCodeCompletion(args);
+            // case 'codeCompletion':
+            //     return this.handleCodeCompletion(args);
             case 'findDefinition':
                 return this.handleFindDefinition(args);
             case 'usageReferences':
                 return this.handleUsageReferences(args);
             case 'syntaxCheckTypes':
                 return this.handleSyntaxCheckTypes(args);
-            case 'codeCompletionFull':
-                return this.handleCodeCompletionFull(args);
+            // case 'codeCompletionFull':
+            //     return this.handleCodeCompletionFull(args);
             case 'runClass':
                 return this.handleRunClass(args);
-            case 'codeCompletionElement':
-                return this.handleCodeCompletionElement(args);
+            // case 'codeCompletionElement':
+            //     return this.handleCodeCompletionElement(args);
             case 'usageReferenceSnippets':
                 return this.handleUsageReferenceSnippets(args);
             case 'fixProposals':
@@ -275,7 +281,39 @@ export class CodeAnalysisHandlers extends BaseHandler {
 
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.syntaxCheck(args.url, args?.mainUrl, code, args?.mainProgram, args?.version);
+            // At this point `code` already holds args.code or a cached source (see
+            // resolution above). A filePath, when provided, takes precedence and
+            // bypasses context entirely (large files).
+            // Validate that not both code and filePath are provided
+            if (args.code && args.filePath) {
+                throw new McpError(
+                    ErrorCode.InvalidParams,
+                    'Cannot use both code and filePath. Use one or the other.'
+                );
+            }
+
+            let codeContent: string;
+            let codeLoadedFrom: string;
+
+            if (args.filePath) {
+                // Read from file (for large files - bypasses context)
+                try {
+                    codeContent = await readFile(args.filePath, 'utf-8');
+                    codeLoadedFrom = `File: ${args.filePath}`;
+                    this.logger.info('Code loaded from file', { filePath: args.filePath });
+                } catch (err: any) {
+                    throw new McpError(
+                        ErrorCode.InvalidRequest,
+                        `Failed to read file ${args.filePath}: ${err.message}`
+                    );
+                }
+            } else {
+                // Use provided code or the cached source resolved above
+                codeContent = code;
+                codeLoadedFrom = usedCachedSource ? 'Cache (session)' : 'Context (direct code)';
+            }
+
+            const result = await this.adtclient.syntaxCheck(args.url, args?.mainUrl, codeContent, args?.mainProgram, args?.version);
             this.trackRequest(startTime, true);
             return {
                 content: [
@@ -284,7 +322,8 @@ export class CodeAnalysisHandlers extends BaseHandler {
                         text: JSON.stringify({
                             status: 'success',
                             usedCachedSource,
-                            result
+                            result,
+                            codeLoadedFrom
                         })
                     }
                 ]

@@ -7,6 +7,14 @@ export interface ToolDefinition {
       type: string;
       description?: string;
       optional?: boolean;
+      properties?: Record<string, {
+        type: string;
+        description?: string;
+        optional?: boolean;
+        properties?: any;  // Allow deeper nesting
+        required?: string[];
+      }>;
+      required?: string[];
     }>;
     required?: string[];
   };

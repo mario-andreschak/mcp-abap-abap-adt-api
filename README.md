@@ -1,23 +1,54 @@
 DISCLAIMER: This server is still in experimental status! Use it with caution!
 
-# ABAP-ADT-API MCP-Server
+# @lingc-sun/mcp-abap-adt
+
+> Fork of [`mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api) with **DDIC object tools**, **large-file `filePath` support**, and **multi-language object creation**.
 
 ## Description
 
-The MCP-Server `mcp-abap-abap-adt-api` is a Model Context Protocol (MCP) server designed to facilitate seamless communication between ABAP systems and MCP clients. It is a wrapper for [abap-adt-api](https://github.com/marcellourbani/abap-adt-api/) and provides a suite of tools and resources for managing ABAP objects, handling transport requests, performing code analysis, and more, enhancing the efficiency and effectiveness of ABAP development workflows.
+The MCP-Server `@lingc-sun/mcp-abap-adt` is a Model Context Protocol (MCP) server designed to facilitate seamless communication between ABAP systems and MCP clients. It is a wrapper for [abap-adt-api](https://github.com/marcellourbani/abap-adt-api/) and provides a suite of tools and resources for managing ABAP objects, handling transport requests, performing code analysis, DDIC operations, and more, enhancing the efficiency and effectiveness of ABAP development workflows.
 
-The server is published on npm as [`mcp-abap-abap-adt-api`](https://www.npmjs.com/package/mcp-abap-abap-adt-api) and listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.mario-andreschak/mcp-abap-abap-adt-api`, so most MCP clients can install it with a single command (or a single click — see [FLUJO](#integrating-with-flujo-recommended) below).
+The server is published on npm as [`@lingc-sun/mcp-abap-adt`](https://www.npmjs.com/package/@lingc-sun/mcp-abap-adt).
 
-> **Related project:** For higher-level, read-oriented ABAP tools (`GetProgram`, `GetClass`, `GetTable`, …) see the separate [`mcp-abap-adt`](https://github.com/mario-andreschak/mcp-abap-adt) server. **This** server (`mcp-abap-abap-adt-api`) exposes the lower-level ADT API (lock/unlock, edit source, transports, activation, syntax checks, DDIC access, …) for full read/write development workflows.
+## ✨ Fork Features (vs. upstream)
+
+This fork adds several enhancements over the upstream `mcp-abap-abap-adt-api`:
+
+- **🔤 DDIC Object Tools** — Full domain and data element configuration:
+  - `setDomainProperties` — Set domain data type, length, output format, fixed values, etc.
+  - `setDataElementProperties` — Set data element type reference, field labels, search help, etc.
+  - Enables complete DDIC workflow: create domain → set properties → create data element → set properties.
+- **📁 Large-file `filePath` support** — Avoid LLM context overflow:
+  - `downloadObjectSource` — Save ABAP source to a local file.
+  - `setObjectSource` / `syntaxCheckCode` accept `filePath` to read/write source from disk instead of passing it through the model context.
+- **🌐 Multi-language object creation** — `createObject` supports `language` / `masterLanguage` parameters.
+- **🔇 Streamlined handlers** — Commented out handlers not useful for MCP (Git, Debug, ATC, Trace, Discovery, CodeCompletion). Re-enable in `src/index.ts` if needed.
+- **🧠 Source caching** — `syntaxCheckCode` reuses the source last read/written for a URL (merged from upstream).
+
+> See also the upstream project for the original implementation: [`mario-andreschak/mcp-abap-abap-adt-api`](https://github.com/mario-andreschak/mcp-abap-abap-adt-api).
 
 ## Features
 
 - **Authentication**: Securely authenticate with ABAP systems using the `login` tool.
 - **Object Management**: Create, read, update, and delete ABAP objects seamlessly.
 - **Transport Handling**: Manage transport requests with tools like `createTransport` and `transportInfo`.
-- **Code Analysis**: Perform syntax checks and retrieve code completion suggestions.
+- **Code Analysis**: Perform syntax checks, find definitions, and retrieve usage references.
+- **DDIC Operations**: Create and configure DDIC objects (domains, data elements) with multi-language support.
 - **Extensibility**: Easily extend the server with additional tools and resources as needed.
 - **Session Management**: Handle session caching and termination using `dropSession` and `logout`.
+
+### Disabled Handlers
+
+The following handlers are commented out as they are not typically useful for MCP server operations:
+
+- **GitHandlers** - Git repository management (use your local Git instead)
+- **DebugHandlers** - Full debugger integration (better suited for IDEs like Eclipse ADT)
+- **AtcHandlers** - ABAP Test Cockpit operations (quality checks better done in SAP GUI)
+- **TraceHandlers** - Performance tracing (better suited for dedicated monitoring tools)
+- **DiscoveryHandlers** - ADT discovery/metadata (mainly for IDE feature detection)
+- **CodeCompletion** - Code completion tools (not practical for LLM-based assistance)
+
+These can be re-enabled by uncommenting the relevant code in `src/index.ts` if needed.
 
 ## Prerequisites
 
@@ -26,46 +57,18 @@ The server is published on npm as [`mcp-abap-abap-adt-api`](https://www.npmjs.co
 
 ## Installation
 
-There are three ways to use this server, from easiest to most manual:
+There are two ways to use this server, from easiest to most manual:
 
-### Integrating with FLUJO (recommended)
+### Quick start with npx (any MCP client) — recommended
 
-[FLUJO](https://github.com/mario-andreschak/FLUJO) is the easiest way to use this server — no cloning, building, or hand-editing JSON config:
-
-1. In FLUJO, navigate to **MCP**.
-2. Click **Add Server**.
-3. On the **Marketplace** tab, search for **`mcp-abap-abap-adt-api`** and select it.
-4. FLUJO fetches the npm package automatically and opens the **Local Server** tab. Enter your SAP **URL**, **User**, **Password** (and optionally client/language), then click **Save**.
-
-That's it — FLUJO downloads and runs the npm package for you and keeps your SAP credentials with the installed server.
-
-#### Streamable HTTP transport (via FLUJO)
-
-`mcp-abap-abap-adt-api` runs over **stdio**. If you need to reach it over **streamable HTTP** — for example from another app on your machine or a client that only speaks HTTP — let FLUJO re-host it: install the server in FLUJO as above, then toggle **"Expose to external apps"** on the server. FLUJO's built-in mcp-proxy then serves it over HTTP at `http://localhost:4200/mcp-proxy/mcp-abap-abap-adt-api`, and any HTTP-capable MCP client can connect with a config like:
+The server is published on npm as `@lingc-sun/mcp-abap-adt`, so most MCP clients (Claude Desktop, Claude Code, Cline, etc.) can launch it directly via `npx` — no cloning or building required. Add it to your MCP client configuration:
 
 ```json
 {
   "mcpServers": {
-    "mcp-abap-abap-adt-api": {
-      "type": "http",
-      "url": "http://localhost:4200/mcp-proxy/mcp-abap-abap-adt-api"
-    }
-  }
-}
-```
-
-FLUJO keeps your SAP credentials with the installed server, so the HTTP config itself carries none.
-
-### Quick start with npx (any MCP client)
-
-The server is published on npm, so you don't need to clone or build anything — most MCP clients can launch it directly via `npx`. Add it to your MCP client configuration (e.g. Cline, Claude Desktop, Claude Code):
-
-```json
-{
-  "mcpServers": {
-    "mcp-abap-abap-adt-api": {
+    "mcp-abap-adt": {
       "command": "npx",
-      "args": ["-y", "mcp-abap-abap-adt-api"],
+      "args": ["-y", "@lingc-sun/mcp-abap-adt"],
       "env": {
         "SAP_URL": "https://your-sap-server.com:44300",
         "SAP_USER": "YOUR_SAP_USERNAME",
@@ -87,7 +90,7 @@ If your SAP system uses a self-signed certificate, add `"NODE_TLS_REJECT_UNAUTHO
 1. **Clone the Repository**
 
    ```cmd
-   git clone https://github.com/mario-andreschak/mcp-abap-abap-adt-api.git
+   git clone https://github.com/lingcSun/mcp-abap-abap-adt-api.git
    cd mcp-abap-abap-adt-api
    ```
 
@@ -138,25 +141,31 @@ If your SAP system uses a self-signed certificate, add `"NODE_TLS_REJECT_UNAUTHO
    npm run start
    ```
 
+   For debugging with MCP Inspector:
+
+   ```cmd
+   npm run dev
+   ```
+
    When integrating a source build into an MCP client, point `command` at `node` with an absolute path to the build output:
 
-   ```json
-   {
-     "mcpServers": {
-       "mcp-abap-abap-adt-api": {
-         "command": "node",
-         "args": ["PATH_TO_YOUR/mcp-abap-abap-adt-api/dist/index.js"],
-         "disabled": false,
-         "autoApprove": []
-       }
-     }
-   }
-   ```
+```json
+{
+  "mcpServers": {
+    "mcp-abap-adt": {
+      "command": "node",
+      "args": ["PATH_TO_YOUR/mcp-abap-abap-adt-api/dist/index.js"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
 
 ## Custom Instruction
 Use this Custom Instruction to explain the tool to your model:
 ```
-## mcp-abap-abap-adt-api Server
+## mcp-abap-adt Server
 
 This server provides tools for interacting with an SAP system via ADT (ABAP Development Tools) APIs. It allows you to retrieve information about ABAP objects, modify source code, and manage transports.
 
@@ -195,8 +204,41 @@ This server provides tools for interacting with an SAP system via ADT (ABAP Deve
 *   **`activate`:** Activates an ABAP object. (See notes below on activation/unlocking.)
     *    `object`: The object to be activated.
 
+*   **`createObject`:** Creates a new ABAP object (supports multi-language parameters).
+    *   `objtype`: (string, required) Object type (e.g., `PROG/P` for program, `CLAS/OC` for class)
+    *   `name`: (string, required) Object name
+    *   `parentName`: (string, required) Parent name (e.g., package name)
+    *   `description`: (string, required) Object description
+    *   `parentPath`: (string, required) Parent path
+    *   `responsible`: (string, optional) Responsible user
+    *   `transport`: (string, optional) Transport request number
+    *   `language`: (string, optional) Language code (e.g., `ZH` for Chinese)
+    *   `masterLanguage`: (string, optional) Master language code
+    *   `masterSystem`: (string, optional) Master system ID
+
+*   **`validateNewObject`:** Validates parameters for creating a new ABAP object.
+    *   `objtype`: (string, required) Object type (e.g., `PROG/P`, `CLAS/OC`, `DEVC/K`)
+    *   `objname`: (string, required) Object name
+    *   `description`: (string, required) Object description
+    *   `packagename`: (string, optional) Package name (for most object types)
+    *   Additional parameters available for specific object types (see tool description)
+
 *   **`getObjectSource`:** Retrieves the source code of an ABAP object.
     *   `objectSourceUrl`: (string, required) The object's URI *with the suffix `/source/main`*.
+
+*   **`setDomainProperties`:** Sets properties for a DDIC domain after creating it.
+    *   `domainUrl`: (string, required) Domain object URL (e.g., `/sap/bc/adt/ddic/domains/zdomain_name`)
+    *   `properties`: (object, required) Domain properties including `typeInformation` (datatype, length, decimals) and `outputInformation` (length, signExists, lowercase, ampmFormat)
+    *   `metaData`: (object, required) Domain metadata (name, description, language, masterLanguage, masterSystem, responsible, packageName)
+    *   `lockHandle`: (string, required) Lock handle from lock operation
+    *   `transport`: (string, optional) Transport request number
+
+*   **`setDataElementProperties`:** Sets properties for a DDIC data element after creating it.
+    *   `dataElementUrl`: (string, required) Data element object URL (e.g., `/sap/bc/adt/ddic/dataelements/zdata_element`)
+    *   `properties`: (object, required) Data element properties including `typeKind`, `typeName`, `dataType`, `dataTypeLength`, and `fieldLabels` (short, medium, long, heading labels with lengths)
+    *   `metaData`: (object, required) Data element metadata (name, description, language, masterLanguage, masterSystem, responsible, packageName)
+    *   `lockHandle`: (string, required) Lock handle from lock operation
+    *   `transport`: (string, optional) Transport request number
 
 **Workflow for Modifying ABAP Code:**
 
@@ -211,7 +253,7 @@ This server provides tools for interacting with an SAP system via ADT (ABAP Deve
 9.  **unLock the object:** Use `unLock`.
 
 **Important Notes:**
-*   **File Handling:** SAP is completly de-coupled from the local file system. Reading source code will only return the code as tool result - it has no effect on file. Files are not synchronized with SAP but merely a local copy for our reference. FYI: It's not strictly necessary for you to create local copies of source codes, as they have no effect on SAP, but it helps us track changes. 
+*   **File Handling:** SAP is completly de-coupled from the local file system. Reading source code will only return the code as tool result - it has no effect on file. Files are not synchronized with SAP but merely a local copy for our reference. FYI: It's not strictly necessary for you to create local copies of source codes, as they have no effect on SAP, but it helps us track changes.
 *   **File Handling:** The local filenames you will use will not contain any paths, but only a filename! It's preferable to use a pattern like "[ObjectName].[ObjectType].abap". (e.g., SAPMV45A.prog.abap for a ABAP Program SAPMV45A, CL_IXML.clas.abap for a Class CL_IXML)
 *   **URL Suffix:**  Remember to add `/source/main` to the object URI when using `setObjectSource` and `getObjectSource`.
 *   **Transport Request:** Obtain the transport request number (e.g., from `transportInfo` or from the user) and include it in relevant operations.
@@ -219,6 +261,18 @@ This server provides tools for interacting with an SAP system via ADT (ABAP Deve
 *   **Activation/Unlocking Order:** The exact order of `activate` and `unLock` operations might need clarification. Refer to the tool descriptions or ask the user. It appears `activate` can be used without unlocking first.
 * **Error Handling:** The tools return JSON responses. Check for error messages within these responses.
 ```
+
+**Workflow for Creating DDIC Objects (Domains and Data Elements):**
+
+1.  **Validate the new object parameters:** Use `validateNewObject` with `objtype: "DDIC/Doma"` for domains or `objtype: "DDIC/DTEL"` for data elements.
+2.  **Create the object:** Use `createObject` with appropriate parameters (including optional `language`, `masterLanguage`, `masterSystem` for multi-language support).
+3.  **Get transport information:** Use `transportInfo`.
+4.  **Lock the object:** Use `lock` on the object URL.
+5.  **Set properties:**
+    - For domains: Use `setDomainProperties` with `typeInformation` (datatype, length, decimals) and `outputInformation` (format settings).
+    - For data elements: Use `setDataElementProperties` with `typeKind`, `typeName`, `dataType`, `fieldLabels`, etc.
+6.  **Activate the object:** Use `activateByName` or `activateObjects`.
+7.  **Unlock the object:** Use `unLock`.
 
 ## Efficient Database Access
 

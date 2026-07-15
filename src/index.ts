@@ -22,18 +22,23 @@ import { ObjectDeletionHandlers } from './handlers/ObjectDeletionHandlers.js';
 import { ObjectManagementHandlers } from './handlers/ObjectManagementHandlers.js';
 import { ObjectRegistrationHandlers } from './handlers/ObjectRegistrationHandlers.js';
 import { NodeHandlers } from './handlers/NodeHandlers.js';
-import { DiscoveryHandlers } from './handlers/DiscoveryHandlers.js';
+// Removed: DiscoveryHandlers (ADT discovery - not useful for MCP server)
+// import { DiscoveryHandlers } from './handlers/DiscoveryHandlers.js';
 import { UnitTestHandlers } from './handlers/UnitTestHandlers.js';
 import { PrettyPrinterHandlers } from './handlers/PrettyPrinterHandlers.js';
-import { GitHandlers } from './handlers/GitHandlers.js';
+// Removed: GitHandlers (Git-related operations)
+// import { GitHandlers } from './handlers/GitHandlers.js';
 import { DdicHandlers } from './handlers/DdicHandlers.js';
 import { ServiceBindingHandlers } from './handlers/ServiceBindingHandlers.js';
 import { QueryHandlers } from './handlers/QueryHandlers.js';
 import { FeedHandlers } from './handlers/FeedHandlers.js';
-import { DebugHandlers } from './handlers/DebugHandlers.js';
+// Removed: DebugHandlers (Debug-related operations)
+// import { DebugHandlers } from './handlers/DebugHandlers.js';
 import { RenameHandlers } from './handlers/RenameHandlers.js';
-import { AtcHandlers } from './handlers/AtcHandlers.js';
-import { TraceHandlers } from './handlers/TraceHandlers.js';
+// Removed: AtcHandlers (ATC-related operations)
+// import { AtcHandlers } from './handlers/AtcHandlers.js';
+// Removed: TraceHandlers (Trace-related operations)
+// import { TraceHandlers } from './handlers/TraceHandlers.js';
 import { RefactorHandlers } from './handlers/RefactorHandlers.js';
 import { RevisionHandlers } from './handlers/RevisionHandlers.js';
 
@@ -52,18 +57,18 @@ export class AbapAdtServer extends Server {
   private objectManagementHandlers: ObjectManagementHandlers;
   private objectRegistrationHandlers: ObjectRegistrationHandlers;
     private nodeHandlers: NodeHandlers;
-    private discoveryHandlers: DiscoveryHandlers;
+    // private discoveryHandlers: DiscoveryHandlers;
     private unitTestHandlers: UnitTestHandlers;
     private prettyPrinterHandlers: PrettyPrinterHandlers;
-    private gitHandlers: GitHandlers;
+    // private gitHandlers: GitHandlers;
     private ddicHandlers: DdicHandlers;
     private serviceBindingHandlers: ServiceBindingHandlers;
     private queryHandlers: QueryHandlers;
     private feedHandlers: FeedHandlers;
-    private debugHandlers: DebugHandlers;
+    // private debugHandlers: DebugHandlers;
     private renameHandlers: RenameHandlers;
-    private atcHandlers: AtcHandlers;
-    private traceHandlers: TraceHandlers;
+    // private atcHandlers: AtcHandlers;
+    // private traceHandlers: TraceHandlers;
     private refactorHandlers: RefactorHandlers;
     private revisionHandlers: RevisionHandlers;
 
@@ -106,18 +111,18 @@ export class AbapAdtServer extends Server {
     this.objectManagementHandlers = new ObjectManagementHandlers(this.adtClient);
     this.objectRegistrationHandlers = new ObjectRegistrationHandlers(this.adtClient);
     this.nodeHandlers = new NodeHandlers(this.adtClient);
-    this.discoveryHandlers = new DiscoveryHandlers(this.adtClient);
+    // this.discoveryHandlers = new DiscoveryHandlers(this.adtClient);
     this.unitTestHandlers = new UnitTestHandlers(this.adtClient);
     this.prettyPrinterHandlers = new PrettyPrinterHandlers(this.adtClient);
-    this.gitHandlers = new GitHandlers(this.adtClient);
+    // this.gitHandlers = new GitHandlers(this.adtClient);
     this.ddicHandlers = new DdicHandlers(this.adtClient);
     this.serviceBindingHandlers = new ServiceBindingHandlers(this.adtClient);
     this.queryHandlers = new QueryHandlers(this.adtClient);
     this.feedHandlers = new FeedHandlers(this.adtClient);
-    this.debugHandlers = new DebugHandlers(this.adtClient);
+    // this.debugHandlers = new DebugHandlers(this.adtClient);
     this.renameHandlers = new RenameHandlers(this.adtClient);
-    this.atcHandlers = new AtcHandlers(this.adtClient);
-    this.traceHandlers = new TraceHandlers(this.adtClient);
+    // this.atcHandlers = new AtcHandlers(this.adtClient);
+    // this.traceHandlers = new TraceHandlers(this.adtClient);
     this.refactorHandlers = new RefactorHandlers(this.adtClient);
     this.revisionHandlers = new RevisionHandlers(this.adtClient);
 
@@ -195,18 +200,18 @@ export class AbapAdtServer extends Server {
           ...this.objectManagementHandlers.getTools(),
           ...this.objectRegistrationHandlers.getTools(),
             ...this.nodeHandlers.getTools(),
-            ...this.discoveryHandlers.getTools(),
+            // ...this.discoveryHandlers.getTools(),
             ...this.unitTestHandlers.getTools(),
             ...this.prettyPrinterHandlers.getTools(),
-            ...this.gitHandlers.getTools(),
+            // ...this.gitHandlers.getTools(),
             ...this.ddicHandlers.getTools(),
             ...this.serviceBindingHandlers.getTools(),
             ...this.queryHandlers.getTools(),
             ...this.feedHandlers.getTools(),
-            ...this.debugHandlers.getTools(),
+            // ...this.debugHandlers.getTools(),
             ...this.renameHandlers.getTools(),
-            ...this.atcHandlers.getTools(),
-            ...this.traceHandlers.getTools(),
+            // ...this.atcHandlers.getTools(),
+            // ...this.traceHandlers.getTools(),
             ...this.refactorHandlers.getTools(),
             ...this.revisionHandlers.getTools(),
             {
@@ -265,13 +270,13 @@ export class AbapAdtServer extends Server {
                 break;
             case 'syntaxCheckCode':
             case 'syntaxCheckCdsUrl':
-            case 'codeCompletion':
+            // case 'codeCompletion':
             case 'findDefinition':
             case 'usageReferences':
             case 'syntaxCheckTypes':
-            case 'codeCompletionFull':
+            // case 'codeCompletionFull':
             case 'runClass':
-            case 'codeCompletionElement':
+            // case 'codeCompletionElement':
             case 'usageReferenceSnippets':
             case 'fixProposals':
             case 'fixEdits':
@@ -280,6 +285,7 @@ export class AbapAdtServer extends Server {
                 result = await this.codeAnalysisHandlers.handle(request.params.name, request.params.arguments);
                 break;
             case 'getObjectSource':
+            case 'downloadObjectSource':
             case 'setObjectSource':
                 result = await this.objectSourceHandlers.handle(request.params.name, request.params.arguments);
                 break;
@@ -300,15 +306,16 @@ export class AbapAdtServer extends Server {
             case 'mainPrograms':
                 result = await this.nodeHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'featureDetails':
-            case 'collectionFeatureDetails':
-            case 'findCollectionByUrl':
-            case 'loadTypes':
-            case 'adtDiscovery':
-            case 'adtCoreDiscovery':
-            case 'adtCompatibiliyGraph':
-                result = await this.discoveryHandlers.handle(request.params.name, request.params.arguments);
-                break;
+            // Discovery-related tools (commented out - not useful for MCP server)
+            // case 'featureDetails':
+            // case 'collectionFeatureDetails':
+            // case 'findCollectionByUrl':
+            // case 'loadTypes':
+            // case 'adtDiscovery':
+            // case 'adtCoreDiscovery':
+            // case 'adtCompatibiliyGraph':
+            //     result = await this.discoveryHandlers.handle(request.params.name, request.params.arguments);
+            //     break;
             case 'unitTestRun':
             case 'unitTestEvaluation':
             case 'unitTestOccurrenceMarkers':
@@ -320,22 +327,25 @@ export class AbapAdtServer extends Server {
             case 'prettyPrinter':
                 result = await this.prettyPrinterHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'gitRepos':
-            case 'gitExternalRepoInfo':
-            case 'gitCreateRepo':
-            case 'gitPullRepo':
-            case 'gitUnlinkRepo':
-            case 'stageRepo':
-            case 'pushRepo':
-            case 'checkRepo':
-            case 'remoteRepoInfo':
-            case 'switchRepoBranch':
-                result = await this.gitHandlers.handle(request.params.name, request.params.arguments);
-                break;
+            // Git-related tools (commented out)
+            // case 'gitRepos':
+            // case 'gitExternalRepoInfo':
+            // case 'gitCreateRepo':
+            // case 'gitPullRepo':
+            // case 'gitUnlinkRepo':
+            // case 'stageRepo':
+            // case 'pushRepo':
+            // case 'checkRepo':
+            // case 'remoteRepoInfo':
+            // case 'switchRepoBranch':
+            //     result = await this.gitHandlers.handle(request.params.name, request.params.arguments);
+            //     break;
             case 'annotationDefinitions':
             case 'ddicElement':
             case 'ddicRepositoryAccess':
             case 'packageSearchHelp':
+            case 'setDomainProperties':
+            case 'setDataElementProperties':
                 result = await this.ddicHandlers.handle(request.params.name, request.params.arguments);
                 break;
             case 'publishServiceBinding':
@@ -351,49 +361,52 @@ export class AbapAdtServer extends Server {
             case 'dumps':
                 result = await this.feedHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'debuggerListeners':
-            case 'debuggerListen':
-            case 'debuggerDeleteListener':
-            case 'debuggerSetBreakpoints':
-            case 'debuggerDeleteBreakpoints':
-            case 'debuggerAttach':
-            case 'debuggerSaveSettings':
-            case 'debuggerStackTrace':
-            case 'debuggerVariables':
-            case 'debuggerChildVariables':
-            case 'debuggerStep':
-            case 'debuggerGoToStack':
-            case 'debuggerSetVariableValue':
-                result = await this.debugHandlers.handle(request.params.name, request.params.arguments);
-                break;
+            // Debug-related tools (commented out)
+            // case 'debuggerListeners':
+            // case 'debuggerListen':
+            // case 'debuggerDeleteListener':
+            // case 'debuggerSetBreakpoints':
+            // case 'debuggerDeleteBreakpoints':
+            // case 'debuggerAttach':
+            // case 'debuggerSaveSettings':
+            // case 'debuggerStackTrace':
+            // case 'debuggerVariables':
+            // case 'debuggerChildVariables':
+            // case 'debuggerStep':
+            // case 'debuggerGoToStack':
+            // case 'debuggerSetVariableValue':
+            //     result = await this.debugHandlers.handle(request.params.name, request.params.arguments);
+            //     break;
             case 'renameEvaluate':
             case 'renamePreview':
             case 'renameExecute':
                 result = await this.renameHandlers.handle(request.params.name, request.params.arguments);
                 break;
-            case 'atcCustomizing':
-            case 'atcCheckVariant':
-            case 'createAtcRun':
-            case 'atcWorklists':
-            case 'atcUsers':
-            case 'atcExemptProposal':
-            case 'atcRequestExemption':
-            case 'isProposalMessage':
-            case 'atcContactUri':
-            case 'atcChangeContact':
-                result = await this.atcHandlers.handle(request.params.name, request.params.arguments);
-                break;
-            case 'tracesList':
-            case 'tracesListRequests':
-            case 'tracesHitList':
-            case 'tracesDbAccess':
-            case 'tracesStatements':
-            case 'tracesSetParameters':
-            case 'tracesCreateConfiguration':
-            case 'tracesDeleteConfiguration':
-            case 'tracesDelete':
-                result = await this.traceHandlers.handle(request.params.name, request.params.arguments);
-                break;
+            // ATC-related tools (commented out)
+            // case 'atcCustomizing':
+            // case 'atcCheckVariant':
+            // case 'createAtcRun':
+            // case 'atcWorklists':
+            // case 'atcUsers':
+            // case 'atcExemptProposal':
+            // case 'atcRequestExemption':
+            // case 'isProposalMessage':
+            // case 'atcContactUri':
+            // case 'atcChangeContact':
+            //     result = await this.atcHandlers.handle(request.params.name, request.params.arguments);
+            //     break;
+            // Trace-related tools (commented out)
+            // case 'tracesList':
+            // case 'tracesListRequests':
+            // case 'tracesHitList':
+            // case 'tracesDbAccess':
+            // case 'tracesStatements':
+            // case 'tracesSetParameters':
+            // case 'tracesCreateConfiguration':
+            // case 'tracesDeleteConfiguration':
+            // case 'tracesDelete':
+            //     result = await this.traceHandlers.handle(request.params.name, request.params.arguments);
+            //     break;
             case 'extractMethodEvaluate':
             case 'extractMethodPreview':
             case 'extractMethodExecute':

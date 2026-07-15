@@ -1,10 +1,10 @@
 {
-  "name": "mcp-abap-abap-adt-api",
-  "version": "0.1.1",
-  "mcpName": "io.github.mario-andreschak/mcp-abap-abap-adt-api",
+  "name": "@lingc-sun/mcp-abap-adt",
+  "version": "1.1.1",
+  "mcpName": "io.github.lingc-sun/mcp-abap-adt",
   "main": "dist/index.js",
   "bin": {
-    "mcp-abap-abap-adt-api": "dist/index.js"
+    "mcp-abap-adt": "dist/index.js"
   },
   "files": [
     "dist"
@@ -26,19 +26,19 @@
     "mcp",
     "model-context-protocol"
   ],
-  "author": "mario-andreschak",
-  "description": "MCP server wrapping abap-adt-api for full ABAP ADT development workflows (object CRUD, transports, locking, syntax check, activation) against SAP systems",
+  "author": "lingc-sun",
+  "description": "MCP server wrapping abap-adt-api for full ABAP ADT development workflows (object CRUD, transports, locking, syntax check, activation, DDIC) against SAP systems",
   "license": "MIT",
   "publishConfig": {
     "access": "public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mario-andreschak/mcp-abap-abap-adt-api.git"
+    "url": "git+https://github.com/lingcSun/mcp-abap-abap-adt-api.git"
   },
-  "homepage": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api#readme",
+  "homepage": "https://github.com/lingcSun/mcp-abap-abap-adt-api#readme",
   "bugs": {
-    "url": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api/issues"
+    "url": "https://github.com/lingcSun/mcp-abap-abap-adt-api/issues"
   },
   "engines": {
     "node": ">=18"

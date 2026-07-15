@@ -18,13 +18,56 @@ export class ObjectRegistrationHandlers extends BaseHandler {
       },
       {
         name: 'validateNewObject',
-        description: 'Validate parameters for a new ABAP object',
+        description: 'Validate parameters for a new ABAP object. Supports different object types: programs (PROG/P), classes (CLAS/OC), interfaces (INTF/OI), function groups (FUGR/F), function modules (FUGR/FF), packages (DEVC/K), service bindings (SRVB/SVB), etc.',
         inputSchema: {
           type: 'object',
           properties: {
-            options: { type: 'string' }
+            objtype: {
+              type: 'string',
+              description: 'Object type (e.g., PROG/P for program, CLAS/OC for class, DEVC/K for package, SRVB/SVB for service binding)'
+            },
+            objname: {
+              type: 'string',
+              description: 'Object name'
+            },
+            description: {
+              type: 'string',
+              description: 'Object description'
+            },
+            packagename: {
+              type: 'string',
+              description: 'Package name (for PROG/P, CLAS/OC, INTF/OI, etc.)'
+            },
+            fugrname: {
+              type: 'string',
+              description: 'Function group name (for FUGR/FF, FUGR/I)'
+            },
+            swcomp: {
+              type: 'string',
+              description: 'Software component (for DEVC/K)'
+            },
+            transportLayer: {
+              type: 'string',
+              description: 'Transport layer (for DEVC/K)'
+            },
+            packagetype: {
+              type: 'string',
+              description: 'Package type: development, structure, or main (for DEVC/K)'
+            },
+            serviceBindingVersion: {
+              type: 'string',
+              description: 'Service binding version, e.g., ODATA\\V2 (for SRVB/SVB)'
+            },
+            serviceDefinition: {
+              type: 'string',
+              description: 'Service definition name (for SRVB/SVB)'
+            },
+            package: {
+              type: 'string',
+              description: 'Package name (for SRVB/SVB)'
+            }
           },
-          required: ['options']
+          required: ['objtype', 'objname', 'description']
         }
       },
       {
@@ -39,7 +82,10 @@ export class ObjectRegistrationHandlers extends BaseHandler {
             description: { type: 'string' },
             parentPath: { type: 'string' },
             responsible: { type: 'string', optional: true },
-            transport: { type: 'string', optional: true }
+            transport: { type: 'string', optional: true },
+            language: { type: 'string', optional: true, description: 'Language code (e.g., ZH for Chinese)' },
+            masterLanguage: { type: 'string', optional: true, description: 'Master language code' },
+            masterSystem: { type: 'string', optional: true, description: 'Master system ID' }
           },
           required: ['objtype', 'name', 'parentName', 'description', 'parentPath']
         }
@@ -86,7 +132,7 @@ export class ObjectRegistrationHandlers extends BaseHandler {
   async handleValidateNewObject(args: any): Promise<any> {
     const startTime = performance.now();
     try {
-      const result = await this.adtclient.validateNewObject(args.options);
+      const result = await this.adtclient.validateNewObject(args);
       this.trackRequest(startTime, true);
       return {
         content: [{
@@ -106,18 +152,23 @@ export class ObjectRegistrationHandlers extends BaseHandler {
     }
   }
 
-  async handleCreateObject(args: any): Promise<any> {    
+  async handleCreateObject(args: any): Promise<any> {
     const startTime = performance.now();
     try {
-      const result = await this.adtclient.createObject(
-        args.objtype,
-        args.name,
-        args.parentName,
-        args.description,
-        args.parentPath,
-        args.responsible,
-        args.transport
-      );
+      // Build options object with all parameters including language settings
+      const options = {
+        objtype: args.objtype,
+        name: args.name,
+        parentName: args.parentName,
+        description: args.description,
+        parentPath: args.parentPath,
+        responsible: args.responsible,
+        transport: args.transport,
+        language: args.language,
+        masterLanguage: args.masterLanguage,
+        masterSystem: args.masterSystem
+      };
+      const result = await this.adtclient.createObject(options);
       this.trackRequest(startTime, true);
       return {
         content: [{

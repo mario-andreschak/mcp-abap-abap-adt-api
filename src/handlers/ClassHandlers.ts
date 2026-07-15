@@ -33,29 +33,6 @@ export class ClassHandlers extends BaseHandler {
                     },
                     required: ['url']
                 }
-            },
-            {
-                name: 'createTestInclude',
-                description: 'Create test include for class',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        clas: {
-                            type: 'string',
-                            description: 'The class name'
-                        },
-                        lockHandle: {
-                            type: 'string',
-                            description: 'The lock handle'
-                        },
-                        transport: {
-                            type: 'string',
-                            description: 'The transport number',
-                            optional: true
-                        }
-                    },
-                    required: ['clas', 'lockHandle']
-                }
             }
         ];
     }
@@ -66,8 +43,6 @@ export class ClassHandlers extends BaseHandler {
                 return this.handleClassIncludes(args);
             case 'classComponents':
                 return this.handleClassComponents(args);
-            case 'createTestInclude':
-                return this.handleCreateTestInclude(args);
             default:
                 throw new McpError(ErrorCode.MethodNotFound, `Unknown class tool: ${toolName}`);
         }
@@ -123,32 +98,4 @@ export class ClassHandlers extends BaseHandler {
         }
     }
 
-    async handleCreateTestInclude(args: any): Promise<any> {
-        const startTime = performance.now();
-        try {
-            const result = await this.adtclient.createTestInclude(
-                args.clas,
-                args.lockHandle,
-                args.transport
-            );
-            this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
-        } catch (error: any) {
-            this.trackRequest(startTime, false);
-            throw new McpError(
-                ErrorCode.InternalError,
-                `Failed to create test include: ${error.message || 'Unknown error'}`
-            );
-        }
-    }
 }

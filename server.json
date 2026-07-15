@@ -1,0 +1,54 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mario-andreschak/mcp-abap-abap-adt-api",
+  "description": "MCP server wrapping abap-adt-api for ABAP ADT development workflows against SAP systems",
+  "version": "0.1.1",
+  "repository": {
+    "url": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mcp-abap-abap-adt-api",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SAP_URL",
+          "description": "Base URL of the SAP system, e.g. https://host:44300",
+          "isRequired": true
+        },
+        {
+          "name": "SAP_USER",
+          "description": "SAP username",
+          "isRequired": true
+        },
+        {
+          "name": "SAP_PASSWORD",
+          "description": "SAP password",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "SAP_CLIENT",
+          "description": "SAP client number, e.g. 100",
+          "isRequired": false
+        },
+        {
+          "name": "SAP_LANGUAGE",
+          "description": "Logon language, e.g. EN",
+          "isRequired": false
+        },
+        {
+          "name": "NODE_TLS_REJECT_UNAUTHORIZED",
+          "description": "Set to 0 to allow self-signed certificates (development only), 1 to enforce TLS verification",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

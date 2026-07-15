@@ -23,22 +23,13 @@ function log(level: LogLevel, name: string, message: string, meta?: Record<strin
     ...meta
   };
   
-  const logString = JSON.stringify(logEntry, null, 2);
-  
-  switch (level) {
-    case 'error':
-      console.error(logString);
-      break;
-    case 'warn':
-      console.warn(logString);
-      break;
-    case 'info':
-      console.info(logString);
-      break;
-    case 'debug':
-      console.debug(logString);
-      break;
-  }
+  const logString = JSON.stringify(logEntry);
+
+  // Always write to stderr. On a stdio MCP server, stdout carries the JSON-RPC
+  // protocol; any log written there corrupts the message stream and the client
+  // fails with "SyntaxError in JSON" (see issue #11). console.info/warn/debug
+  // all write to stdout, so route every level through stderr instead.
+  process.stderr.write(logString + '\n');
 }
 
 export type Logger = ReturnType<typeof createLogger>;

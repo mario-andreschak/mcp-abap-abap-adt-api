@@ -3,19 +3,21 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from 'abap-adt-api';
 import { readFile } from 'fs/promises';
+import { sourceCache } from '../lib/sourceCache.js';
 
 export class CodeAnalysisHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
         return [
             {
                 name: 'syntaxCheckCode',
-                description: 'Perform ABAP syntax check with source code. Use filePath for large files to avoid context overflow.',
+                description: 'Perform ABAP syntax check. Provide the source in "code" (or "filePath" for large files), or omit it to reuse the source last read/written for "url" via getObjectSource/setObjectSource (cached this session).',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         code: {
                             type: 'string',
-                            description: 'Source code content (for small files - will be included in context)'
+                            description: 'Source code content (for small files - will be included in context). Optional if the source for "url" was already read or written this session.',
+                            optional: true
                         },
                         filePath: {
                             type: 'string',
@@ -26,7 +28,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
                         mainProgram: { type: 'string', optional: true },
                         version: { type: 'string', optional: true }
                     },
-                    required: []
+                    required: ['url']
                 }
             },
             {
@@ -260,17 +262,29 @@ export class CodeAnalysisHandlers extends BaseHandler {
         }
     }
     async handleSyntaxCheckCode(args: any): Promise<any> {
-        const startTime = performance.now();
-        try {
-            // Validate that either code or filePath is provided
-            if (!args.code && !args.filePath) {
+        // Reuse the source cached by getObjectSource/setObjectSource for this
+        // URL when the caller does not pass it explicitly (issue #2). Resolved
+        // before the try so a missing-source error keeps its InvalidParams code.
+        let code = args?.code;
+        let usedCachedSource = false;
+        if (code === undefined || code === null || code === '') {
+            const cached = sourceCache.get(args.url);
+            if (cached === undefined) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
-                    'Either code or filePath must be provided'
+                    `No source provided and none cached for '${args.url}'. Pass "code", or call getObjectSource/setObjectSource for this URL first.`
                 );
             }
+            code = cached;
+            usedCachedSource = true;
+        }
 
-            // Validate that not both are provided
+        const startTime = performance.now();
+        try {
+            // At this point `code` already holds args.code or a cached source (see
+            // resolution above). A filePath, when provided, takes precedence and
+            // bypasses context entirely (large files).
+            // Validate that not both code and filePath are provided
             if (args.code && args.filePath) {
                 throw new McpError(
                     ErrorCode.InvalidParams,
@@ -279,11 +293,13 @@ export class CodeAnalysisHandlers extends BaseHandler {
             }
 
             let codeContent: string;
+            let codeLoadedFrom: string;
 
             if (args.filePath) {
                 // Read from file (for large files - bypasses context)
                 try {
                     codeContent = await readFile(args.filePath, 'utf-8');
+                    codeLoadedFrom = `File: ${args.filePath}`;
                     this.logger.info('Code loaded from file', { filePath: args.filePath });
                 } catch (err: any) {
                     throw new McpError(
@@ -292,8 +308,9 @@ export class CodeAnalysisHandlers extends BaseHandler {
                     );
                 }
             } else {
-                // Use provided code (for small files - from context)
-                codeContent = args.code;
+                // Use provided code or the cached source resolved above
+                codeContent = code;
+                codeLoadedFrom = usedCachedSource ? 'Cache (session)' : 'Context (direct code)';
             }
 
             const result = await this.adtclient.syntaxCheck(args.url, args?.mainUrl, codeContent, args?.mainProgram, args?.version);
@@ -304,8 +321,9 @@ export class CodeAnalysisHandlers extends BaseHandler {
                         type: 'text',
                         text: JSON.stringify({
                             status: 'success',
+                            usedCachedSource,
                             result,
-                            codeLoadedFrom: args.filePath ? `File: ${args.filePath}` : 'Context (direct code)'
+                            codeLoadedFrom
                         })
                     }
                 ]

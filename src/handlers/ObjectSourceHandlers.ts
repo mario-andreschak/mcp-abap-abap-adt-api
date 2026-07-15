@@ -4,18 +4,30 @@ import type { ToolDefinition } from '../types/tools';
 import { performance } from 'perf_hooks';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
+import { session_types } from "abap-adt-api";
+import { sourceCache } from '../lib/sourceCache';
 
 export class ObjectSourceHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
     return [
       {
         name: 'getObjectSource',
-        description: 'Retrieves source code for ABAP objects',
+        description: 'Retrieves source code for ABAP objects. For large objects, use startLine/maxLines to page through the source instead of retrieving it all at once.',
         inputSchema: {
           type: 'object',
           properties: {
             objectSourceUrl: { type: 'string' },
-            options: { type: 'string' }
+            options: { type: 'string' },
+            startLine: {
+              type: 'number',
+              description: '1-based line number to start from (default 1). Use with maxLines to page through large sources.',
+              optional: true
+            },
+            maxLines: {
+              type: 'number',
+              description: 'Maximum number of lines to return from startLine. Omit to return the rest of the source.',
+              optional: true
+            }
           },
           required: ['objectSourceUrl']
         }
@@ -92,15 +104,37 @@ export class ObjectSourceHandlers extends BaseHandler {
     
     const startTime = performance.now();
     try {
-      const source = await this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+      const fullSource = await this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+      // Remember the source so a later syntaxCheckCode on the same URL can reuse
+      // it without the caller re-sending it (issue #2).
+      sourceCache.set(args.objectSourceUrl, fullSource);
       this.trackRequest(startTime, true);
+
+      const lines = fullSource.split('\n');
+      const totalLines = lines.length;
+
+      // Optional pagination for large sources (issue #4). When neither
+      // parameter is provided, behaviour is unchanged: the whole source is returned.
+      const hasPaging = args.startLine !== undefined || args.maxLines !== undefined;
+      const startLine = Math.max(1, Number(args.startLine) || 1);
+      const startIndex = startLine - 1;
+      const endIndex = args.maxLines !== undefined
+        ? startIndex + Math.max(0, Number(args.maxLines))
+        : totalLines;
+      const source = hasPaging ? lines.slice(startIndex, endIndex).join('\n') : fullSource;
+      const returnedLines = hasPaging ? Math.min(endIndex, totalLines) - startIndex : totalLines;
+
       return {
         content: [
           {
             type: 'text',
             text: JSON.stringify({
               status: 'success',
-              source
+              source,
+              totalLines,
+              startLine: hasPaging ? startLine : 1,
+              returnedLines: Math.max(0, returnedLines),
+              hasMore: hasPaging ? endIndex < totalLines : false
             })
           }
         ]
@@ -119,6 +153,9 @@ export class ObjectSourceHandlers extends BaseHandler {
     try {
       // Get source from SAP
       const source = await this.adtclient.getObjectSource(args.objectSourceUrl, args.options);
+      // Remember the source so a later syntaxCheckCode on the same URL can reuse
+      // it without the caller re-sending it (issue #2).
+      sourceCache.set(args.objectSourceUrl, source);
 
       // Ensure directory exists
       const dir = dirname(args.filePath);
@@ -200,12 +237,17 @@ export class ObjectSourceHandlers extends BaseHandler {
         sourceContent = args.source;
       }
 
+      // dropSession/logout reset the client to stateless; writing source requires a stateful session
+      this.adtclient.stateful = session_types.stateful;
       await this.adtclient.setObjectSource(
         args.objectSourceUrl,
         sourceContent,
         args.lockHandle,
         args.transport
       );
+      // Cache the just-written source so a follow-up syntaxCheckCode can reuse it
+      // without the caller re-sending it (issue #2).
+      sourceCache.set(args.objectSourceUrl, sourceContent);
       this.trackRequest(startTime, true);
       return {
         content: [

@@ -1,29 +1,58 @@
 {
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.4.1",
-    "@types/node": "^22.10.10",
-    "abap-adt-api": "^6.2.0",
-    "dotenv": "^16.4.7",
-    "typescript": "^5.7.3"
-  },
   "name": "mcp-abap-abap-adt-api",
   "version": "0.1.1",
-  "main": "index.js",
+  "mcpName": "io.github.mario-andreschak/mcp-abap-abap-adt-api",
+  "main": "dist/index.js",
+  "bin": {
+    "mcp-abap-abap-adt-api": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "build": "tsc -p tsconfig.json",
     "start": "node ./dist/index.js",
-    "dev": "npx @modelcontextprotocol/inspector ./dist/index.js"
+    "dev": "npx @modelcontextprotocol/inspector ./dist/index.js",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "abap",
+    "sap",
+    "adt",
+    "abap-adt-api",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "author": "mario-andreschak",
+  "description": "MCP server wrapping abap-adt-api for full ABAP ADT development workflows (object CRUD, transports, locking, syntax check, activation) against SAP systems",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mario-andreschak/mcp-abap-abap-adt-api.git"
+  },
+  "homepage": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api#readme",
+  "bugs": {
+    "url": "https://github.com/mario-andreschak/mcp-abap-abap-adt-api/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.4.1",
+    "abap-adt-api": "^8.4.1",
+    "dotenv": "^16.4.7"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.10",
     "jest": "^29.7.0",
-    "ts-jest": "^29.2.5"
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3"
   }
 }

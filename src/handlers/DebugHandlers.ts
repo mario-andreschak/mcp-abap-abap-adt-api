@@ -384,7 +384,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get debugger listeners: ${error.message || 'Unknown error'}`
+                `Failed to get debugger listeners: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -416,7 +416,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to start debugger listener: ${error.message || 'Unknown error'}`
+                `Failed to start debugger listener: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -446,7 +446,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to delete debugger listener: ${error.message || 'Unknown error'}`
+                `Failed to delete debugger listener: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -482,7 +482,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to set breakpoints: ${error.message || 'Unknown error'}`
+                `Failed to set breakpoints: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -514,7 +514,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to delete breakpoints: ${error.message || 'Unknown error'}`
+                `Failed to delete breakpoints: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -544,7 +544,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to attach debugger: ${error.message || 'Unknown error'}`
+                `Failed to attach debugger: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -569,7 +569,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to save debugger settings: ${error.message || 'Unknown error'}`
+                `Failed to save debugger settings: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -594,7 +594,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get stack trace: ${error.message || 'Unknown error'}`
+                `Failed to get stack trace: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -619,7 +619,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get variables: ${error.message || 'Unknown error'}`
+                `Failed to get variables: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -644,7 +644,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get child variables: ${error.message || 'Unknown error'}`
+                `Failed to get child variables: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -669,7 +669,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to perform debug step: ${error.message || 'Unknown error'}`
+                `Failed to perform debug step: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -694,7 +694,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to go to stack position: ${error.message || 'Unknown error'}`
+                `Failed to go to stack position: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -719,7 +719,7 @@ export class DebugHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to set variable value: ${error.message || 'Unknown error'}`
+                `Failed to set variable value: ${this.formatAdtError(error)}`
             );
         }
     }

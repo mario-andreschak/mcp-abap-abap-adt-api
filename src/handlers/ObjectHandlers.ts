@@ -118,8 +118,7 @@ export class ObjectHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            const errorMessage = error.message || 'Unknown error';
-            const detailedError = error.response?.data?.message || errorMessage;
+            const detailedError = this.formatAdtError(error);
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to get object structure: ${detailedError}`
@@ -146,8 +145,7 @@ export class ObjectHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            const errorMessage = error.message || 'Unknown error';
-            const detailedError = error.response?.data?.message || errorMessage;
+            const detailedError = this.formatAdtError(error);
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to find object path: ${detailedError}`
@@ -178,8 +176,7 @@ export class ObjectHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            const errorMessage = error.message || 'Unknown error';
-            const detailedError = error.response?.data?.message || errorMessage;
+            const detailedError = this.formatAdtError(error);
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to search objects: ${detailedError}`
@@ -206,8 +203,7 @@ export class ObjectHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            const errorMessage = error.message || 'Unknown error';
-            const detailedError = error.response?.data?.message || errorMessage;
+            const detailedError = this.formatAdtError(error);
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to get object types: ${detailedError}`
@@ -234,8 +230,7 @@ export class ObjectHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            const errorMessage = error.message || 'Unknown error';
-            const detailedError = error.response?.data?.message || errorMessage;
+            const detailedError = this.formatAdtError(error);
             throw new McpError(
                 ErrorCode.InternalError,
                 `Failed to get reentrance ticket: ${detailedError}`

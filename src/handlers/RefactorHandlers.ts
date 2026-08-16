@@ -100,7 +100,7 @@ export class RefactorHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to evaluate extract method: ${error.message || 'Unknown error'}`
+                `Failed to evaluate extract method: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -126,7 +126,7 @@ export class RefactorHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to preview extract method: ${error.message || 'Unknown error'}`
+                `Failed to preview extract method: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -152,7 +152,7 @@ export class RefactorHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to execute extract method: ${error.message || 'Unknown error'}`
+                `Failed to execute extract method: ${this.formatAdtError(error)}`
             );
         }
     }

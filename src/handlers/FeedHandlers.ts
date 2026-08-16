@@ -62,7 +62,7 @@ export class FeedHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get feeds: ${error.message || 'Unknown error'}`
+                `Failed to get feeds: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -87,7 +87,7 @@ export class FeedHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get dumps: ${error.message || 'Unknown error'}`
+                `Failed to get dumps: ${this.formatAdtError(error)}`
             );
         }
     }

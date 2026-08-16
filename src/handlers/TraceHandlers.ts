@@ -195,7 +195,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get traces list: ${error.message || 'Unknown error'}`
+                `Failed to get traces list: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -220,7 +220,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get trace requests: ${error.message || 'Unknown error'}`
+                `Failed to get trace requests: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -245,7 +245,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get trace hit list: ${error.message || 'Unknown error'}`
+                `Failed to get trace hit list: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -270,7 +270,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get trace DB access: ${error.message || 'Unknown error'}`
+                `Failed to get trace DB access: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -295,7 +295,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get trace statements: ${error.message || 'Unknown error'}`
+                `Failed to get trace statements: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -320,7 +320,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to set trace parameters: ${error.message || 'Unknown error'}`
+                `Failed to set trace parameters: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -345,7 +345,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to create trace configuration: ${error.message || 'Unknown error'}`
+                `Failed to create trace configuration: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -370,7 +370,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to delete trace configuration: ${error.message || 'Unknown error'}`
+                `Failed to delete trace configuration: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -395,7 +395,7 @@ export class TraceHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to delete trace: ${error.message || 'Unknown error'}`
+                `Failed to delete trace: ${this.formatAdtError(error)}`
             );
         }
     }

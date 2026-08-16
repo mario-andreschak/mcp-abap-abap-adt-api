@@ -100,7 +100,7 @@ export class ObjectSourceHandlers extends BaseHandler {
       this.trackRequest(startTime, false);
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to get object source: ${error.message || 'Unknown error'}`
+        `Failed to get object source: ${this.formatAdtError(error)}`
       );
     }
   }
@@ -135,7 +135,7 @@ export class ObjectSourceHandlers extends BaseHandler {
       this.trackRequest(startTime, false);
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to set object source: ${error.message || 'Unknown error'}`
+        `Failed to set object source: ${this.formatAdtError(error)}`
       );
     }
   }

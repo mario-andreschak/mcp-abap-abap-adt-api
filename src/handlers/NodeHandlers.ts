@@ -100,7 +100,7 @@ export class NodeHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get node contents: ${error.message || 'Unknown error'}`
+                `Failed to get node contents: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -125,7 +125,7 @@ export class NodeHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get main programs: ${error.message || 'Unknown error'}`
+                `Failed to get main programs: ${this.formatAdtError(error)}`
             );
         }
     }

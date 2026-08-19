@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { GitRepo, GitStaging } from 'abap-adt-api';
+import { shrinkToFit, SAFE_OUTPUT_CHARS } from '../lib/responseSizing.js';
 
 export class GitHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -78,7 +79,7 @@ export class GitHandlers extends BaseHandler {
             },
             {
                 name: 'gitPullRepo',
-                description: 'Pulls changes from a Git repository.',
+                description: 'Pulls changes from a Git repository. For repos with many changed objects, use startIndex/maxItems to page through the list of imported/changed objects returned in the response instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -105,6 +106,16 @@ export class GitHandlers extends BaseHandler {
                             type: 'string',
                             description: 'The password.',
                             optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the imported/changed object to start from (default 0). Use with maxItems to page through a large pull result. Note: the pull itself already happened by the time this pages the result - this only limits what is reported back.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of imported/changed objects to return from startIndex. Omit to return the rest.',
+                            optional: true
                         }
                     },
                     required: ['repoId']
@@ -126,7 +137,7 @@ export class GitHandlers extends BaseHandler {
             },
             {
                 name: 'stageRepo',
-                description: 'Stages changes in a Git repository.',
+                description: 'Stages changes in a Git repository. For a large initial package push, use startIndex/maxItems to page through the staged/unstaged/ignored object lists instead of retrieving them all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -142,6 +153,16 @@ export class GitHandlers extends BaseHandler {
                         password: {
                             type: 'string',
                             description: 'The password.',
+                            optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index into each of the staged/unstaged/ignored lists to start from (default 0). Use with maxItems to page through large staging results.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of items per list (staged/unstaged/ignored) to return from startIndex. Omit to return the rest.',
                             optional: true
                         }
                     },
@@ -384,17 +405,46 @@ export class GitHandlers extends BaseHandler {
                 args.password
             );
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            // The pull itself already happened by the time we get here - paging
+            // below only limits what is reported back, not what was imported.
+            const allObjects: any[] = Array.isArray(result) ? result : [];
+            const totalObjects = allObjects.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalObjects - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalObjects);
+                const payload: any = {
+                    status: 'success',
+                    result: allObjects.slice(startIndex, endIndex),
+                    totalObjects,
+                    startIndex,
+                    returnedObjects: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalObjects
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue. The pull itself already completed - this only limits what is reported back.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -432,23 +482,69 @@ export class GitHandlers extends BaseHandler {
     async handleStageRepo(args: any): Promise<any> {
         const startTime = performance.now();
         try {
-            const result = await this.adtclient.stageRepo(
+            const result: GitStaging = await this.adtclient.stageRepo(
                 args.repo,
                 args.user,
                 args.password
             );
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const staged: any[] = Array.isArray(result.staged) ? result.staged : [];
+            const unstaged: any[] = Array.isArray(result.unstaged) ? result.unstaged : [];
+            const ignored: any[] = Array.isArray(result.ignored) ? result.ignored : [];
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const largestList = Math.max(staged.length, unstaged.length, ignored.length);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : largestList - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const page = (arr: any[]) => {
+                    const endIndex = Math.min(startIndex + count, arr.length);
+                    return {
+                        items: arr.slice(startIndex, endIndex),
+                        total: arr.length,
+                        returned: Math.max(0, endIndex - startIndex),
+                        hasMore: endIndex < arr.length
+                    };
+                };
+                const stagedPage = page(staged);
+                const unstagedPage = page(unstaged);
+                const ignoredPage = page(ignored);
+                const paged = {
+                    ...result,
+                    staged: stagedPage.items,
+                    unstaged: unstagedPage.items,
+                    ignored: ignoredPage.items
+                };
+                const payload: any = {
+                    status: 'success',
+                    result: paged,
+                    startIndex,
+                    totals: { staged: stagedPage.total, unstaged: unstagedPage.total, ignored: ignoredPage.total },
+                    returned: { staged: stagedPage.returned, unstaged: unstagedPage.returned, ignored: ignoredPage.returned },
+                    hasMore: stagedPage.hasMore || unstagedPage.hasMore || ignoredPage.hasMore
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(

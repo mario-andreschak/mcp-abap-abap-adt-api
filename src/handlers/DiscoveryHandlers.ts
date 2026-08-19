@@ -1,6 +1,7 @@
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
+import { SAFE_OUTPUT_CHARS, shrinkToFit, hardTruncateJson } from '../lib/responseSizing.js';
 
 export class DiscoveryHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -57,18 +58,40 @@ export class DiscoveryHandlers extends BaseHandler {
             },
             {
                 name: 'adtDiscovery',
-                description: 'Performs ADT discovery.',
+                description: 'Performs ADT discovery. Returns a list of discovery collections. For large systems, use startIndex/maxItems to page through the list instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
-                    properties: {}
+                    properties: {
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the discovery entry to start from (default 0). Use with maxItems to page through a large discovery list.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of discovery entries to return from startIndex. Omit to return the rest.',
+                            optional: true
+                        }
+                    }
                 }
             },
             {
                 name: 'adtCoreDiscovery',
-                description: 'Performs ADT core discovery.',
+                description: 'Performs ADT core discovery. Returns a list of core discovery collections. For large systems, use startIndex/maxItems to page through the list instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
-                    properties: {}
+                    properties: {
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the core discovery entry to start from (default 0). Use with maxItems to page through a large list.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of core discovery entries to return from startIndex. Omit to return the rest.',
+                            optional: true
+                        }
+                    }
                 }
             },
             {
@@ -208,17 +231,7 @@ export class DiscoveryHandlers extends BaseHandler {
         try {
             const discovery = await this.adtclient.adtDiscovery();
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            discovery
-                        })
-                    }
-                ]
-            };
+            return this.buildPagedArrayResponse(discovery, 'discovery', args);
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -233,17 +246,7 @@ export class DiscoveryHandlers extends BaseHandler {
         try {
             const discovery = await this.adtclient.adtCoreDiscovery();
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            discovery
-                        })
-                    }
-                ]
-            };
+            return this.buildPagedArrayResponse(discovery, 'discovery', args);
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -258,17 +261,17 @@ export class DiscoveryHandlers extends BaseHandler {
         try {
             const graph = await this.adtclient.adtCompatibiliyGraph();
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            graph
-                        })
-                    }
-                ]
-            };
+            // The graph is a genuinely heterogeneous document (a `nodes` array
+            // and a correlated `edges` array that references those nodes, both
+            // scaling with system size) - there is no single clean array to
+            // page over, so fall back to a hard character truncation as a
+            // last-resort safety net. hardTruncateJson returns the untouched
+            // JSON unchanged when it already fits under SAFE_OUTPUT_CHARS.
+            const text = hardTruncateJson({
+                status: 'success',
+                graph
+            });
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -276,5 +279,48 @@ export class DiscoveryHandlers extends BaseHandler {
                 `Failed to get ADT compatibility graph: ${error.message || 'Unknown error'}`
             );
         }
+    }
+
+    // Shared paging for adtDiscovery/adtCoreDiscovery, both of which resolve
+    // directly to a top-level array (AdtDiscoveryResult[] / AdtCoreDiscoveryResult[])
+    // rather than an object wrapping one.
+    private buildPagedArrayResponse(items: any[], fieldName: string, args: any): any {
+        const allItems: any[] = Array.isArray(items) ? items : [];
+        const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+        if (!requestedPaging) {
+            const text = JSON.stringify({ status: 'success', [fieldName]: allItems });
+            if (text.length <= SAFE_OUTPUT_CHARS) {
+                return { content: [{ type: 'text', text }] };
+            }
+        }
+
+        const totalItems = allItems.length;
+        const startIndex = Math.max(0, Number(args.startIndex) || 0);
+        const initialMaxItems = args.maxItems !== undefined
+            ? Math.max(0, Number(args.maxItems))
+            : totalItems - startIndex;
+
+        const text = shrinkToFit(initialMaxItems, (count, capped) => {
+            const endIndex = Math.min(startIndex + count, totalItems);
+            const payload: any = {
+                status: 'success',
+                [fieldName]: allItems.slice(startIndex, endIndex),
+                totalItems,
+                startIndex,
+                returnedItems: Math.max(0, endIndex - startIndex),
+                hasMore: endIndex < totalItems
+            };
+            if (!requestedPaging) {
+                payload.autoPaged = true;
+            }
+            if (capped) {
+                payload.capped = true;
+                payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+            }
+            return payload;
+        });
+
+        return { content: [{ type: 'text', text }] };
     }
 }

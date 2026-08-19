@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { DebuggingMode, DebuggerScope, DebugBreakpoint, DebugSettings } from 'abap-adt-api';
+import { SAFE_OUTPUT_CHARS, shrinkToFit } from '../lib/responseSizing.js';
 
 export class DebugHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -245,13 +246,23 @@ export class DebugHandlers extends BaseHandler {
             },
             {
                 name: 'debuggerVariables',
-                description: 'Retrieves debugger variables.',
+                description: 'Retrieves debugger variables. If an inspected parent is a large internal table, use startIndex/maxItems to page through the returned variable list instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         parents: {
                             type: 'array',
                             description: 'An array of parent variable names.'
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the variable list to start from (default 0). Use with maxItems to page through a large result.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of variables to return from startIndex. Omit to return the rest.',
+                            optional: true
                         }
                     },
                     required: ['parents']
@@ -259,13 +270,23 @@ export class DebugHandlers extends BaseHandler {
             },
             {
                 name: 'debuggerChildVariables',
-                description: 'Retrieves child variables of a debugger variable.',
+                description: 'Retrieves child variables of a debugger variable. If the parent is a large structure/table, use startIndex/maxItems to page through the returned child rows instead of retrieving them all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         parent: {
                             type: 'array',
                             description: 'The parent variable name.',
+                            optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the child variable list to start from (default 0). Use with maxItems to page through a large result.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of child variables to return from startIndex. Omit to return the rest.',
                             optional: true
                         }
                     }
@@ -604,17 +625,44 @@ export class DebugHandlers extends BaseHandler {
         try {
             const result = await this.adtclient.debuggerVariables(args.parents);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const allItems: any[] = Array.isArray(result) ? result : [];
+            const totalItems = allItems.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalItems - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalItems);
+                const payload: any = {
+                    status: 'success',
+                    result: allItems.slice(startIndex, endIndex),
+                    totalItems,
+                    startIndex,
+                    returnedItems: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalItems
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -629,17 +677,53 @@ export class DebugHandlers extends BaseHandler {
         try {
             const result = await this.adtclient.debuggerChildVariables(args.parent);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            // variables scales with the inspected structure/table size; hierarchies
+            // is the parallel parent/child linkage list returned alongside it, so
+            // it is sliced in lockstep with the same index range.
+            const allVariables: any[] = Array.isArray(result?.variables) ? result.variables : [];
+            const allHierarchies: any[] = Array.isArray(result?.hierarchies) ? result.hierarchies : [];
+            const totalItems = allVariables.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalItems - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalItems);
+                const pagedResult = {
+                    ...result,
+                    variables: allVariables.slice(startIndex, endIndex),
+                    hierarchies: allHierarchies.slice(startIndex, endIndex)
+                };
+                const payload: any = {
+                    status: 'success',
+                    result: pagedResult,
+                    totalItems,
+                    startIndex,
+                    returnedItems: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalItems
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(

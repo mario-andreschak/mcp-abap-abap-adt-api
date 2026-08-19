@@ -281,6 +281,7 @@ export class AbapAdtServer extends Server {
                 break;
             case 'getObjectSource':
             case 'setObjectSource':
+            case 'editObjectSource':
                 result = await this.objectSourceHandlers.handle(request.params.name, request.params.arguments);
                 break;
             case 'deleteObject':

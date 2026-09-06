@@ -54,7 +54,10 @@ export class AuthHandlers extends BaseHandler {
         content: [
           {
             type: 'text',
-            text: JSON.stringify(loginResult)
+            // ADTClient.login() resolves with undefined when the session is already
+            // authenticated. JSON.stringify(undefined) returns undefined, which makes
+            // the SDK reject the tool result as invalid (MCP error -32602).
+            text: JSON.stringify(loginResult ?? { status: 'logged in' })
           }
         ]
       };

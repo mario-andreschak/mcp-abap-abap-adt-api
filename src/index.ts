@@ -37,6 +37,127 @@ import { TraceHandlers } from './handlers/TraceHandlers.js';
 import { RefactorHandlers } from './handlers/RefactorHandlers.js';
 import { RevisionHandlers } from './handlers/RevisionHandlers.js';
 
+
+// ---------------------------------------------------------------------------
+// Error diagnostics and session recovery
+//
+// Two problems this addresses, both observed against an on-premise ABAP system:
+//
+// 1. Diagnostics. When the underlying HTTP layer wraps a failure, `message`
+//    can collapse to "Request failed with status code 400" and the response
+//    body SAP actually returned is dropped. Callers then have nothing to go on.
+//    `mcpEnrichError` appends the body and the ADT exception fields to the
+//    message, leaving the original error object otherwise untouched.
+//
+// 2. Session loss. When the stateful session is dropped, only stateful calls
+//    fail (lock, createTransport, transportInfo, ...) while plain reads keep
+//    working. That asymmetry makes it look like a build or permission problem.
+//    `resilientClient` re-authenticates and retries such a call exactly once.
+//
+// Deliberately NOT retried:
+//   - network-level failures (the server may already have applied the request),
+//   - ADT business errors, which carry a specific exception `type`,
+//   - login/logout/dropSession themselves, to avoid recursion.
+// ---------------------------------------------------------------------------
+const SESSION_NO_RETRY = new Set(["login", "logout", "dropSession", "statelessClone"]);
+
+export function mcpErrStatus(e: any): number | undefined {
+  const s = e?.response?.status ?? e?.parent?.response?.status ?? e?.status ?? e?.err;
+  return typeof s === "number" ? s : undefined;
+}
+
+/** Best-effort extraction of the response body SAP returned. */
+export function mcpErrBody(e: any): string {
+  const d = e?.response?.data ?? e?.parent?.response?.data ?? e?.response?.body ?? e?.parent?.response?.body;
+  if (d === undefined || d === null) return "";
+  let t: string;
+  if (typeof d === "string") t = d;
+  else { try { t = JSON.stringify(d); } catch { t = String(d); } }
+  const m = t.match(/<message[^>]*>([\s\S]*?)<\/message>/i);
+  if (m) t = m[1];
+  return t.replace(/\s+/g, " ").trim();
+}
+
+/** Appends what SAP actually returned to `message`. Returns the same error object. */
+export function mcpEnrichError(e: any): any {
+  if (!e || typeof e !== "object" || e.__mcpEnriched) return e;
+  const msg = String(e.message ?? "");
+  const bits: string[] = [];
+  const st = mcpErrStatus(e);
+  if (st && !msg.includes(String(st))) bits.push("HTTP " + st);
+  for (const k of ["type", "namespace"]) {
+    const v = e[k];
+    if (typeof v === "string" && v && !msg.includes(v)) bits.push(k + "=" + v);
+  }
+  const lm = e.localizedMessage;
+  if (typeof lm === "string" && lm && lm !== msg && !msg.includes(lm)) bits.push("localized=" + lm);
+  let body = mcpErrBody(e);
+  if (body) {
+    if (body.length > 700) body = body.slice(0, 700) + "...(truncated)";
+    if (!msg.includes(body.slice(0, 40))) bits.push("SAP: " + body);
+  }
+  if (bits.length) {
+    // AdtHttpException exposes `message` as a prototype getter with no setter,
+    // so plain assignment is silently ignored. Define an own property instead.
+    try {
+      Object.defineProperty(e, "message", {
+        value: msg + " [" + bits.join(" | ") + "]",
+        writable: true,
+        configurable: true
+      });
+    } catch { /* frozen error object */ }
+  }
+  try { Object.defineProperty(e, "__mcpEnriched", { value: true, enumerable: false }); } catch { /* frozen */ }
+  return e;
+}
+
+/** Heuristic: does this failure look like a dropped session rather than a real error? */
+export function mcpLooksLikeSessionLoss(e: any): boolean {
+  const code = String(e?.code ?? e?.parent?.code ?? "");
+  // Network-level failures are not retried: the request may already have been applied.
+  if (/ECONNABORTED|ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ERR_BAD_RESPONSE/.test(code)) return false;
+  const text = String(e?.message ?? "") + " " + mcpErrBody(e);
+  if (/session|csrf|stateful|timed out/i.test(text)) return true;
+  // A specific ADT exception type means a business error; retrying changes nothing.
+  if (typeof e?.type === "string" && e.type) return false;
+  return mcpErrStatus(e) === 400;
+}
+
+/**
+ * Wraps an ADTClient so every tool gets error enrichment and one-shot session
+ * recovery. Methods are invoked with the raw client as `this`, so internal
+ * calls do not re-enter the proxy.
+ */
+export function resilientClient(client: ADTClient): ADTClient {
+  return new Proxy(client as any, {
+    get(target: any, prop: string | symbol) {
+      const val = Reflect.get(target, prop, target);
+      if (typeof val !== "function" || typeof prop !== "string") return val;
+      return function (...args: any[]) {
+        let out: any;
+        try { out = val.apply(target, args); }
+        catch (e) { throw mcpEnrichError(e); }
+        if (!out || typeof out.then !== "function") return out;
+        return Promise.resolve(out).catch(async (err: any) => {
+          const first = mcpEnrichError(err);
+          if (SESSION_NO_RETRY.has(prop) || !mcpLooksLikeSessionLoss(err)) throw first;
+          console.error(JSON.stringify({
+            level: "warn",
+            service: "resilience",
+            message: "session loss suspected - re-login and retry once",
+            tool: prop,
+            error: String(first?.message ?? "").slice(0, 300)
+          }));
+          try { await target.login(); }
+          catch { throw first; }
+          try { return await val.apply(target, args); }
+          catch (e2: any) { throw mcpEnrichError(e2); }
+        });
+      };
+    }
+  }) as ADTClient;
+}
+
 config({ path: path.resolve(__dirname, '../.env') });
 
 export class AbapAdtServer extends Server {
@@ -85,13 +206,13 @@ export class AbapAdtServer extends Server {
       throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
     }
     
-    this.adtClient = new ADTClient(
+    this.adtClient = resilientClient(new ADTClient(
       process.env.SAP_URL as string,
       process.env.SAP_USER as string,
       process.env.SAP_PASSWORD as string,
       process.env.SAP_CLIENT as string,
       process.env.SAP_LANGUAGE as string
-    );
+    ));
     this.adtClient.stateful = session_types.stateful
     
     // Initialize handlers

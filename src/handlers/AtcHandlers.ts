@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { AtcProposal } from 'abap-adt-api';
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { shrinkToFit, SAFE_OUTPUT_CHARS } from '../lib/responseSizing.js';
 
 export class AtcHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -54,7 +55,7 @@ export class AtcHandlers extends BaseHandler {
             },
             {
                 name: 'atcWorklists',
-                description: 'Retrieves ATC worklists.',
+                description: 'Retrieves ATC worklists. For runs covering many objects, use startIndex/maxItems to page through the findings-per-object list instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -75,6 +76,16 @@ export class AtcHandlers extends BaseHandler {
                         includeExempted: {
                             type: 'boolean',
                             description: 'Whether to include exempted findings.',
+                            optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the object (with its findings) to start from (default 0). Use with maxItems to page through large worklists.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of objects (each with its findings) to return from startIndex. Omit to return the rest.',
                             optional: true
                         }
                     },
@@ -268,22 +279,50 @@ export class AtcHandlers extends BaseHandler {
         }
     }
 
-    async handleAtcWorklists(args: { runResultId: string, timestamp?: number, usedObjectSet?: string, includeExempted?: boolean }): Promise<any> {
+    async handleAtcWorklists(args: { runResultId: string, timestamp?: number, usedObjectSet?: string, includeExempted?: boolean, startIndex?: number, maxItems?: number }): Promise<any> {
         const startTime = performance.now();
         try {
             const result = await this.adtclient.atcWorklists(args.runResultId, args.timestamp || 0, args.usedObjectSet || "", args.includeExempted);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const allObjects: any[] = Array.isArray(result.objects) ? result.objects : [];
+            const totalObjects = allObjects.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalObjects - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalObjects);
+                const paged = { ...result, objects: allObjects.slice(startIndex, endIndex) };
+                const payload: any = {
+                    status: 'success',
+                    result: paged,
+                    totalObjects,
+                    startIndex,
+                    returnedObjects: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalObjects
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(

@@ -2,6 +2,7 @@ import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from "abap-adt-api";
+import { SAFE_OUTPUT_CHARS, shrinkToFit } from '../lib/responseSizing.js';
 
 export class TransportHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -119,7 +120,7 @@ export class TransportHandlers extends BaseHandler {
             },
             {
                 name: 'userTransports',
-                description: 'Retrieves transports for a user.',
+                description: 'Retrieves transports for a user. For large results (many transports/tasks), use startIndex/maxItems to page through the flattened list of transport requests instead of retrieving them all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -131,6 +132,16 @@ export class TransportHandlers extends BaseHandler {
                             type: 'boolean',
                             description: 'Whether to include target systems.',
                             optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the flattened transport-request list to start from (default 0). Use with maxItems to page through large result sets.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of transport requests to return from startIndex. Omit to return the rest.',
+                            optional: true
                         }
                     },
                     required: ['user']
@@ -138,7 +149,7 @@ export class TransportHandlers extends BaseHandler {
             },
             {
                 name: 'transportsByConfig',
-                description: 'Retrieves transports by configuration.',
+                description: 'Retrieves transports by configuration. For large results (many transports/tasks), use startIndex/maxItems to page through the flattened list of transport requests instead of retrieving them all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
@@ -149,6 +160,16 @@ export class TransportHandlers extends BaseHandler {
                         targets: {
                             type: 'boolean',
                             description: 'Whether to include target systems.',
+                            optional: true
+                        },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the flattened transport-request list to start from (default 0). Use with maxItems to page through large result sets.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of transport requests to return from startIndex. Omit to return the rest.',
                             optional: true
                         }
                     },
@@ -231,10 +252,21 @@ export class TransportHandlers extends BaseHandler {
             },
             {
                 name: 'systemUsers',
-                description: 'Retrieves a list of system users.',
+                description: 'Retrieves a list of system users. For large results, use startIndex/maxItems to page through the user list instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
-                    properties: {}
+                    properties: {
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the user list to start from (default 0). Use with maxItems to page through a large user list.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of users to return from startIndex. Omit to return the rest.',
+                            optional: true
+                        }
+                    }
                 }
             },
             {
@@ -494,17 +526,7 @@ export class TransportHandlers extends BaseHandler {
         try {
             const transports = await this.adtclient.userTransports(args.user, args.targets);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            transports
-                        })
-                    }
-                ]
-            };
+            return this.buildTransportsOfUserResponse(transports, args);
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -519,17 +541,7 @@ export class TransportHandlers extends BaseHandler {
         try {
             const transports = await this.adtclient.transportsByConfig(args.configUri, args.targets);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            transports
-                        })
-                    }
-                ]
-            };
+            return this.buildTransportsOfUserResponse(transports, args);
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -537,6 +549,72 @@ export class TransportHandlers extends BaseHandler {
                 `Failed to get transports by config: ${error.message || 'Unknown error'}`
             );
         }
+    }
+
+    // Shared response shaping for userTransports/transportsByConfig, which both
+    // return a TransportsOfUser ({ workbench: TransportTarget[], customizing:
+    // TransportTarget[] }) - there is no single flat array field, the actual
+    // volume is nested two levels down in each target's modifiable/released
+    // TransportRequest[] lists. When the full structure is small it is
+    // returned as-is (old shape); otherwise it is flattened into one list of
+    // { category, targetName, targetDesc, listType, request } entries so it
+    // can be paged/shrunk like the other handlers' top-level arrays.
+    private buildTransportsOfUserResponse(result: any, args: any): any {
+        const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+        if (!requestedPaging) {
+            const text = JSON.stringify({ status: 'success', transports: result });
+            if (text.length <= SAFE_OUTPUT_CHARS) {
+                return { content: [{ type: 'text', text }] };
+            }
+        }
+
+        const flattened: any[] = [];
+        for (const category of ['workbench', 'customizing'] as const) {
+            const targets = Array.isArray(result?.[category]) ? result[category] : [];
+            for (const target of targets) {
+                for (const listType of ['modifiable', 'released'] as const) {
+                    const requests = Array.isArray(target?.[listType]) ? target[listType] : [];
+                    for (const request of requests) {
+                        flattened.push({
+                            category,
+                            targetName: target?.['tm:name'],
+                            targetDesc: target?.['tm:desc'],
+                            listType,
+                            request
+                        });
+                    }
+                }
+            }
+        }
+
+        const totalItems = flattened.length;
+        const startIndex = Math.max(0, Number(args.startIndex) || 0);
+        const initialMaxItems = args.maxItems !== undefined
+            ? Math.max(0, Number(args.maxItems))
+            : totalItems - startIndex;
+
+        const text = shrinkToFit(initialMaxItems, (count, capped) => {
+            const endIndex = Math.min(startIndex + count, totalItems);
+            const payload: any = {
+                status: 'success',
+                transports: flattened.slice(startIndex, endIndex),
+                totalItems,
+                startIndex,
+                returnedItems: Math.max(0, endIndex - startIndex),
+                hasMore: endIndex < totalItems
+            };
+            if (!requestedPaging) {
+                payload.autoPaged = true;
+            }
+            if (capped) {
+                payload.capped = true;
+                payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+            }
+            return payload;
+        });
+
+        return { content: [{ type: 'text', text }] };
     }
 
     async handleTransportDelete(args: any): Promise<any> {
@@ -644,17 +722,43 @@ export class TransportHandlers extends BaseHandler {
         try {
             const users = await this.adtclient.systemUsers();
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            users
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', users });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const totalItems = users.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalItems - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalItems);
+                const payload: any = {
+                    status: 'success',
+                    users: users.slice(startIndex, endIndex),
+                    totalItems,
+                    startIndex,
+                    returnedItems: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalItems
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(

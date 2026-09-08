@@ -3,6 +3,7 @@ import { BaseHandler } from './BaseHandler.js';
 import type { ToolDefinition } from '../types/tools.js';
 import { ADTClient } from 'abap-adt-api';
 import { sourceCache } from '../lib/sourceCache.js';
+import { SAFE_OUTPUT_CHARS, shrinkToFit } from '../lib/responseSizing.js';
 
 export class CodeAnalysisHandlers extends BaseHandler {
     getTools(): ToolDefinition[] {
@@ -70,13 +71,23 @@ export class CodeAnalysisHandlers extends BaseHandler {
             },
             {
                 name: 'usageReferences',
-                description: 'Find symbol references',
+                description: 'Find symbol references (system-wide "where used"). For widely-used symbols this can return hundreds/thousands of hits; use startIndex/maxItems to page through the result instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
                         url: { type: 'string' },
                         line: { type: 'number', optional: true },
-                        column: { type: 'number', optional: true }
+                        column: { type: 'number', optional: true },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the first reference to return (default 0). Use with maxItems to page through large result sets.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of references to return from startIndex. Omit to return the rest.',
+                            optional: true
+                        }
                     },
                     required: ['url']
                 }
@@ -131,11 +142,21 @@ export class CodeAnalysisHandlers extends BaseHandler {
             },
             {
                 name: 'usageReferenceSnippets',
-                description: 'Retrieves usage reference snippets.',
+                description: 'Retrieves usage reference snippets (source excerpts) for a list of usage references, e.g. from usageReferences. For large input lists the returned snippets can be large; use startIndex/maxItems to page through the result instead of retrieving it all at once.',
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        references: { type: 'array' }
+                        references: { type: 'array' },
+                        startIndex: {
+                            type: 'number',
+                            description: '0-based index of the first snippet to return (default 0). Use with maxItems to page through large result sets.',
+                            optional: true
+                        },
+                        maxItems: {
+                            type: 'number',
+                            description: 'Maximum number of snippets to return from startIndex. Omit to return the rest.',
+                            optional: true
+                        }
                     },
                     required: ['references']
                 }
@@ -370,17 +391,43 @@ export class CodeAnalysisHandlers extends BaseHandler {
                 args.column
             );
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const totalItems = result.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalItems - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalItems);
+                const payload: any = {
+                    status: 'success',
+                    result: result.slice(startIndex, endIndex),
+                    totalItems,
+                    startIndex,
+                    returnedItems: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalItems
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(
@@ -493,19 +540,49 @@ export class CodeAnalysisHandlers extends BaseHandler {
     async handleUsageReferenceSnippets(args: any): Promise<any> {
         const startTime = performance.now();
         try {
+            // Note: `args.references` (the input list) is not capped here - it is
+            // the caller's choice/responsibility (e.g. it may come straight from
+            // usageReferences). Only the OUTPUT (snippets, which can multiply the
+            // size further) is paged/shrunk below.
             const result = await this.adtclient.usageReferenceSnippets(args.references);
             this.trackRequest(startTime, true);
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: JSON.stringify({
-                            status: 'success',
-                            result
-                        })
-                    }
-                ]
-            };
+
+            const requestedPaging = args.startIndex !== undefined || args.maxItems !== undefined;
+
+            if (!requestedPaging) {
+                const text = JSON.stringify({ status: 'success', result });
+                if (text.length <= SAFE_OUTPUT_CHARS) {
+                    return { content: [{ type: 'text', text }] };
+                }
+            }
+
+            const totalItems = result.length;
+            const startIndex = Math.max(0, Number(args.startIndex) || 0);
+            const initialMaxItems = args.maxItems !== undefined
+                ? Math.max(0, Number(args.maxItems))
+                : totalItems - startIndex;
+
+            const text = shrinkToFit(initialMaxItems, (count, capped) => {
+                const endIndex = Math.min(startIndex + count, totalItems);
+                const payload: any = {
+                    status: 'success',
+                    result: result.slice(startIndex, endIndex),
+                    totalItems,
+                    startIndex,
+                    returnedItems: Math.max(0, endIndex - startIndex),
+                    hasMore: endIndex < totalItems
+                };
+                if (!requestedPaging) {
+                    payload.autoPaged = true;
+                }
+                if (capped) {
+                    payload.capped = true;
+                    payload.note = 'Requested/default range exceeded the safe response size and was shrunk to fit. Pass a smaller maxItems (or a later startIndex) to continue.';
+                }
+                return payload;
+            });
+
+            return { content: [{ type: 'text', text }] };
         } catch (error: any) {
             this.trackRequest(startTime, false);
             throw new McpError(

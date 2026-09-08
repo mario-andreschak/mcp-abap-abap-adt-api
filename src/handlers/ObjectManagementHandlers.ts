@@ -151,7 +151,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       }
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to activate objects: ${error.message || 'Unknown error'}`
+        `Failed to activate objects: ${this.formatAdtError(error)}`
       );
     }
   }
@@ -183,7 +183,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       }
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to activate object: ${error.message || 'Unknown error'}`
+        `Failed to activate object: ${this.formatAdtError(error)}`
       );
     }
   }
@@ -206,7 +206,7 @@ export class ObjectManagementHandlers extends BaseHandler {
       }
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to get inactive objects: ${error.message || 'Unknown error'}`
+        `Failed to get inactive objects: ${this.formatAdtError(error)}`
       );
     }
   }

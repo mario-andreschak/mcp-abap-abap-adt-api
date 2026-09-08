@@ -95,7 +95,7 @@ export class QueryHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            throw new Error(`Failed to retrieve table contents: ${error.message || 'Unknown error'}`);
+            throw new Error(`Failed to retrieve table contents: ${this.formatAdtError(error)}`);
         }
     }
 
@@ -121,7 +121,7 @@ export class QueryHandlers extends BaseHandler {
             };
         } catch (error: any) {
             this.trackRequest(startTime, false);
-            throw new Error(`Failed to run query: ${error.message || 'Unknown error'}`);
+            throw new Error(`Failed to run query: ${this.formatAdtError(error)}`);
         }
     }
 }

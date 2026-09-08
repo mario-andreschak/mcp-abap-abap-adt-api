@@ -57,7 +57,7 @@ export class RevisionHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get revisions: ${error.message || 'Unknown error'}`
+                `Failed to get revisions: ${this.formatAdtError(error)}`
             );
         }
     }

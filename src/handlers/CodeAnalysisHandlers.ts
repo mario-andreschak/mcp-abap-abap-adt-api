@@ -251,7 +251,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Syntax check failed: ${error.message || 'Unknown error'}`
+                `Syntax check failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -293,7 +293,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Syntax check failed: ${error.message || 'Unknown error'}`
+                `Syntax check failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -323,7 +323,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Code completion failed: ${error.message || 'Unknown error'}`
+                `Code completion failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -356,7 +356,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Find definition failed: ${error.message || 'Unknown error'}`
+                `Find definition failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -385,7 +385,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Usage references failed: ${error.message || 'Unknown error'}`
+                `Usage references failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -410,7 +410,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Syntax check types failed: ${error.message || 'Unknown error'}`
+                `Syntax check types failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -435,7 +435,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Code completion full failed: ${error.message || 'Unknown error'}`
+                `Code completion full failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -460,7 +460,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Run class failed: ${error.message || 'Unknown error'}`
+                `Run class failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -485,7 +485,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Code completion element failed: ${error.message || 'Unknown error'}`
+                `Code completion element failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -510,7 +510,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Usage reference snippets failed: ${error.message || 'Unknown error'}`
+                `Usage reference snippets failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -535,7 +535,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Fix proposals failed: ${error.message || 'Unknown error'}`
+                `Fix proposals failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -560,7 +560,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Fix edits failed: ${error.message || 'Unknown error'}`
+                `Fix edits failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -585,7 +585,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Fragment mappings failed: ${error.message || 'Unknown error'}`
+                `Fragment mappings failed: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -610,7 +610,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `ABAP documentation failed: ${error.message || 'Unknown error'}`
+                `ABAP documentation failed: ${this.formatAdtError(error)}`
             );
         }
     }

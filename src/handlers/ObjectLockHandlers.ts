@@ -76,7 +76,7 @@ export class ObjectLockHandlers extends BaseHandler {
       this.trackRequest(startTime, false);
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to lock object: ${error.message || 'Unknown error'}`
+        `Failed to lock object: ${this.formatAdtError(error)}`
       );
     }
   }
@@ -103,7 +103,7 @@ export class ObjectLockHandlers extends BaseHandler {
       this.trackRequest(startTime, false);
       throw new McpError(
         ErrorCode.InternalError,
-        `Failed to unlock object: ${error.message || 'Unknown error'}`
+        `Failed to unlock object: ${this.formatAdtError(error)}`
       );
     }
   }

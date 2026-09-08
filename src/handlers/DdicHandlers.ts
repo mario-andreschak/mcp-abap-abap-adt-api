@@ -114,7 +114,7 @@ export class DdicHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get annotation definitions: ${error.message || 'Unknown error'}`
+                `Failed to get annotation definitions: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -144,7 +144,7 @@ export class DdicHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get DDIC element: ${error.message || 'Unknown error'}`
+                `Failed to get DDIC element: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -169,7 +169,7 @@ export class DdicHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to access DDIC repository: ${error.message || 'Unknown error'}`
+                `Failed to access DDIC repository: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -194,7 +194,7 @@ export class DdicHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get package search help: ${error.message || 'Unknown error'}`
+                `Failed to get package search help: ${this.formatAdtError(error)}`
             );
         }
     }

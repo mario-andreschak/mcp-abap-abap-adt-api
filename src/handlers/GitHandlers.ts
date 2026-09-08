@@ -307,7 +307,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get git repos: ${error.message || 'Unknown error'}`
+                `Failed to get git repos: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -336,7 +336,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get external repo info: ${error.message || 'Unknown error'}`
+                `Failed to get external repo info: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -368,7 +368,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to create git repo: ${error.message || 'Unknown error'}`
+                `Failed to create git repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -399,7 +399,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to pull git repo: ${error.message || 'Unknown error'}`
+                `Failed to pull git repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -424,7 +424,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to unlink git repo: ${error.message || 'Unknown error'}`
+                `Failed to unlink git repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -453,7 +453,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to stage repo: ${error.message || 'Unknown error'}`
+                `Failed to stage repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -483,7 +483,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to push repo: ${error.message || 'Unknown error'}`
+                `Failed to push repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -512,7 +512,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to check repo: ${error.message || 'Unknown error'}`
+                `Failed to check repo: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -541,7 +541,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get remote repo info: ${error.message || 'Unknown error'}`
+                `Failed to get remote repo info: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -572,7 +572,7 @@ export class GitHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to switch repo branch: ${error.message || 'Unknown error'}`
+                `Failed to switch repo branch: ${this.formatAdtError(error)}`
             );
         }
     }

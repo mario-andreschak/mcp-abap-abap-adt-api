@@ -68,7 +68,7 @@ export class ClassHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get class includes: ${error.message || 'Unknown error'}`
+                `Failed to get class includes: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -93,7 +93,7 @@ export class ClassHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get class components: ${error.message || 'Unknown error'}`
+                `Failed to get class components: ${this.formatAdtError(error)}`
             );
         }
     }

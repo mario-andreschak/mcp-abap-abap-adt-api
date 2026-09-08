@@ -66,8 +66,7 @@ export class ObjectDeletionHandlers extends BaseHandler {
       };
     } catch (error: any) {
       this.trackRequest(startTime, false);
-      const errorMessage = error.message || 'Unknown error';
-      const detailedError = error.response?.data?.message || errorMessage;
+      const detailedError = this.formatAdtError(error);
       throw new McpError(
         ErrorCode.InternalError,
         `Failed to delete object: ${detailedError}`

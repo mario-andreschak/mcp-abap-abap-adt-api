@@ -3,6 +3,7 @@ import type { ADTClient } from "abap-adt-api";
 import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 import { performance } from 'perf_hooks';
 import { createLogger } from '../lib/logger';
+import { formatAdtError } from '../lib/adtErrorFormatting';
 
 enum CustomErrorCode {
   TooManyRequests = 429,
@@ -55,6 +56,15 @@ export abstract class BaseHandler {
     }
     
     this.rateLimiter.set(ip, now);
+  }
+
+  /**
+   * Formats a caught error for inclusion in an McpError message, recovering the
+   * real SAP-side message/properties even when abap-adt-api's own error parsing
+   * fell back to a bare "Request failed with status code NNN".
+   */
+  protected formatAdtError(error: unknown): string {
+    return formatAdtError(error);
   }
 
   protected getMetrics() {

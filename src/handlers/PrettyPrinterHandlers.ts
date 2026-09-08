@@ -82,7 +82,7 @@ export class PrettyPrinterHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to get pretty printer settings: ${error.message || 'Unknown error'}`
+                `Failed to get pretty printer settings: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -107,7 +107,7 @@ export class PrettyPrinterHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to set pretty printer settings: ${error.message || 'Unknown error'}`
+                `Failed to set pretty printer settings: ${this.formatAdtError(error)}`
             );
         }
     }
@@ -132,7 +132,7 @@ export class PrettyPrinterHandlers extends BaseHandler {
             this.trackRequest(startTime, false);
             throw new McpError(
                 ErrorCode.InternalError,
-                `Failed to format ABAP code: ${error.message || 'Unknown error'}`
+                `Failed to format ABAP code: ${this.formatAdtError(error)}`
             );
         }
     }

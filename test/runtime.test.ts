@@ -126,11 +126,13 @@ export async function fixture(timeout = 2000) {
     },
   };
 }
-test("all126 original handlers register with current SDK and missing config remains discoverable", async () => {
+test("all129 handlers register with current SDK and missing config remains discoverable", async () => {
   const r = new Runtime({});
   const s = createServer(r);
-  assert.equal(r.tools.length, 126);
-  assert.equal(new Set(r.tools.map((t) => t.definition.name)).size, 126);
+  // 126 upstream tools + 3 new tools (downloadObjectSource,
+  // setDataElementProperties, setDomainProperties)
+  assert.equal(r.tools.length, 129);
+  assert.equal(new Set(r.tools.map((t) => t.definition.name)).size, 129);
   assert.equal(decode(await r.invoke("healthcheck", {})).sapConfigured, false);
   await assert.rejects(r.invoke("login", {}), /Configure SAP/);
   await r.close();

@@ -216,7 +216,12 @@
                       ]
                     }
                   },
-                  "required": ["object", "package", "subobject", "target"],
+                  "required": [
+                    "object",
+                    "package",
+                    "subobject",
+                    "target"
+                  ],
                   "additionalProperties": true
                 },
                 "restrictByCheck": {
@@ -263,15 +268,27 @@
                       ]
                     }
                   },
-                  "required": ["check", "message", "target"],
+                  "required": [
+                    "check",
+                    "message",
+                    "target"
+                  ],
                   "additionalProperties": true
                 }
               },
-              "required": ["enabled", "restrictByObject", "restrictByCheck"],
+              "required": [
+                "enabled",
+                "restrictByObject",
+                "restrictByCheck"
+              ],
               "additionalProperties": true
             }
           },
-          "required": ["enabled", "singlefinding", "rangeOfFindings"],
+          "required": [
+            "enabled",
+            "singlefinding",
+            "rangeOfFindings"
+          ],
           "additionalProperties": true
         },
         "apprIsArea": {
@@ -554,7 +571,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["adtcore:uri", "adtcore:name"],
+            "required": [
+              "adtcore:uri",
+              "adtcore:name"
+            ],
             "additionalProperties": true
           }
         },
@@ -781,6 +801,425 @@
       ]
     },
     "name": {
+      "type": "string",
+      "maxLength": 1048576
+    }
+  },
+  "setDomainProperties": {
+    "domainUrl": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "typeInformation": {
+          "type": "object",
+          "properties": {
+            "datatype": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "length": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "decimals": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "datatype",
+            "length",
+            "decimals"
+          ],
+          "additionalProperties": true
+        },
+        "outputInformation": {
+          "type": "object",
+          "properties": {
+            "length": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "style": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "conversionExit": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "signExists": {
+              "anyOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "boolean",
+                  "const": true
+                }
+              ]
+            },
+            "lowercase": {
+              "anyOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "boolean",
+                  "const": true
+                }
+              ]
+            },
+            "ampmFormat": {
+              "anyOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "boolean",
+                  "const": true
+                }
+              ]
+            }
+          },
+          "required": [
+            "length",
+            "signExists",
+            "lowercase",
+            "ampmFormat"
+          ],
+          "additionalProperties": true
+        },
+        "valueInformation": {
+          "type": "object",
+          "properties": {
+            "valueTableRef": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "appendExists": {
+              "anyOf": [
+                {
+                  "type": "boolean",
+                  "const": false
+                },
+                {
+                  "type": "boolean",
+                  "const": true
+                }
+              ]
+            },
+            "fixValues": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "low": {
+                    "type": "string",
+                    "maxLength": 1048576
+                  },
+                  "high": {
+                    "type": "string",
+                    "maxLength": 1048576
+                  },
+                  "text": {
+                    "type": "string",
+                    "maxLength": 1048576
+                  }
+                },
+                "required": [
+                  "low"
+                ],
+                "additionalProperties": true
+              },
+              "maxItems": 1000
+            }
+          },
+          "required": [
+            "valueTableRef",
+            "appendExists"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "typeInformation",
+        "outputInformation"
+      ],
+      "additionalProperties": true
+    },
+    "metaData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "language": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "masterLanguage": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "masterSystem": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "responsible": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageName": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageDescription": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageUri": {
+          "type": "string",
+          "maxLength": 1048576
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "language",
+        "masterLanguage",
+        "masterSystem",
+        "responsible",
+        "packageName"
+      ],
+      "additionalProperties": true
+    },
+    "lockHandle": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "transport": {
+      "type": "string",
+      "maxLength": 1048576
+    }
+  },
+  "setDataElementProperties": {
+    "dataElementUrl": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "typeName": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "dataType": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "dataTypeLength": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "dataTypeDecimals": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "fieldLabels": {
+          "type": "object",
+          "properties": {
+            "shortFieldLabel": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "shortFieldLength": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "mediumFieldLabel": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "mediumFieldLength": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "longFieldLabel": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "longFieldLength": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "headingFieldLabel": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "headingFieldLength": {
+              "type": "number",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "shortFieldLabel",
+            "mediumFieldLabel",
+            "longFieldLabel",
+            "headingFieldLabel"
+          ],
+          "additionalProperties": true
+        },
+        "searchHelp": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "searchHelpParameter": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "setGetParameter": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "defaultComponentName": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "deactivateInputHistory": {
+          "anyOf": [
+            {
+              "type": "boolean",
+              "const": false
+            },
+            {
+              "type": "boolean",
+              "const": true
+            }
+          ]
+        },
+        "changeDocument": {
+          "anyOf": [
+            {
+              "type": "boolean",
+              "const": false
+            },
+            {
+              "type": "boolean",
+              "const": true
+            }
+          ]
+        },
+        "leftToRightDirection": {
+          "anyOf": [
+            {
+              "type": "boolean",
+              "const": false
+            },
+            {
+              "type": "boolean",
+              "const": true
+            }
+          ]
+        },
+        "deactivateBIDIFiltering": {
+          "anyOf": [
+            {
+              "type": "boolean",
+              "const": false
+            },
+            {
+              "type": "boolean",
+              "const": true
+            }
+          ]
+        }
+      },
+      "required": [
+        "typeName",
+        "dataType",
+        "dataTypeLength",
+        "fieldLabels"
+      ],
+      "additionalProperties": true
+    },
+    "metaData": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "language": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "masterLanguage": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "masterSystem": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "responsible": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageName": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageDescription": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "packageUri": {
+          "type": "string",
+          "maxLength": 1048576
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "language",
+        "masterLanguage",
+        "masterSystem",
+        "responsible",
+        "packageName"
+      ],
+      "additionalProperties": true
+    },
+    "lockHandle": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "transport": {
       "type": "string",
       "maxLength": 1048576
     }
@@ -1016,7 +1455,10 @@
                             "maximum": 9007199254740991
                           }
                         },
-                        "required": ["line", "column"],
+                        "required": [
+                          "line",
+                          "column"
+                        ],
                         "additionalProperties": true
                       },
                       "end": {
@@ -1033,11 +1475,17 @@
                             "maximum": 9007199254740991
                           }
                         },
-                        "required": ["line", "column"],
+                        "required": [
+                          "line",
+                          "column"
+                        ],
                         "additionalProperties": true
                       }
                     },
-                    "required": ["start", "end"],
+                    "required": [
+                      "start",
+                      "end"
+                    ],
                     "additionalProperties": true
                   },
                   "hashparms": {
@@ -1050,7 +1498,10 @@
                     }
                   }
                 },
-                "required": ["uri", "range"],
+                "required": [
+                  "uri",
+                  "range"
+                ],
                 "additionalProperties": true
               },
               "type": {
@@ -1179,7 +1630,10 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 },
                 "end": {
@@ -1196,11 +1650,17 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 }
               },
-              "required": ["start", "end"],
+              "required": [
+                "start",
+                "end"
+              ],
               "additionalProperties": true
             },
             "hashparms": {
@@ -1213,7 +1673,10 @@
               }
             }
           },
-          "required": ["uri", "range"],
+          "required": [
+            "uri",
+            "range"
+          ],
           "additionalProperties": true
         },
         "type": {
@@ -1689,7 +2152,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -1789,7 +2255,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -1862,19 +2331,33 @@
                           },
                           "type": {}
                         },
-                        "required": ["href", "rel"],
+                        "required": [
+                          "href",
+                          "rel"
+                        ],
                         "additionalProperties": true
                       },
                       "maxItems": 1000
                     }
                   },
-                  "required": ["name", "path", "localState", "links"],
+                  "required": [
+                    "name",
+                    "path",
+                    "localState",
+                    "links"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
               }
             },
-            "required": ["wbkey", "uri", "type", "name", "abapGitFiles"],
+            "required": [
+              "wbkey",
+              "uri",
+              "type",
+              "name",
+              "abapGitFiles"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -1932,19 +2415,33 @@
                           },
                           "type": {}
                         },
-                        "required": ["href", "rel"],
+                        "required": [
+                          "href",
+                          "rel"
+                        ],
                         "additionalProperties": true
                       },
                       "maxItems": 1000
                     }
                   },
-                  "required": ["name", "path", "localState", "links"],
+                  "required": [
+                    "name",
+                    "path",
+                    "localState",
+                    "links"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
               }
             },
-            "required": ["wbkey", "uri", "type", "name", "abapGitFiles"],
+            "required": [
+              "wbkey",
+              "uri",
+              "type",
+              "name",
+              "abapGitFiles"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -2002,19 +2499,33 @@
                           },
                           "type": {}
                         },
-                        "required": ["href", "rel"],
+                        "required": [
+                          "href",
+                          "rel"
+                        ],
                         "additionalProperties": true
                       },
                       "maxItems": 1000
                     }
                   },
-                  "required": ["name", "path", "localState", "links"],
+                  "required": [
+                    "name",
+                    "path",
+                    "localState",
+                    "links"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
               }
             },
-            "required": ["wbkey", "uri", "type", "name", "abapGitFiles"],
+            "required": [
+              "wbkey",
+              "uri",
+              "type",
+              "name",
+              "abapGitFiles"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -2035,7 +2546,10 @@
               "maxLength": 1048576
             }
           },
-          "required": ["name", "email"],
+          "required": [
+            "name",
+            "email"
+          ],
           "additionalProperties": true
         },
         "committer": {
@@ -2050,7 +2564,10 @@
               "maxLength": 1048576
             }
           },
-          "required": ["name", "email"],
+          "required": [
+            "name",
+            "email"
+          ],
           "additionalProperties": true
         }
       },
@@ -2147,7 +2664,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -2247,7 +2767,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -2347,7 +2870,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -2571,339 +3097,43 @@
       "maxLength": 1048576
     }
   },
-  "validateNewObject": {
+  "validateNewObject": {},
+  "createObject": {},
+  "downloadObjectSource": {
+    "objectSourceUrl": {
+      "type": "string",
+      "maxLength": 1048576
+    },
     "options": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {
-            "objtype": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "const": "PROG/P"
-                },
-                {
-                  "type": "string",
-                  "const": "FUGR/F"
-                },
-                {
-                  "type": "string",
-                  "const": "CLAS/OC"
-                },
-                {
-                  "type": "string",
-                  "const": "INTF/OI"
-                },
-                {
-                  "type": "string",
-                  "const": "PROG/I"
-                },
-                {
-                  "type": "string",
-                  "const": "DCLS/DL"
-                },
-                {
-                  "type": "string",
-                  "const": "DDLS/DF"
-                },
-                {
-                  "type": "string",
-                  "const": "DDLX/EX"
-                },
-                {
-                  "type": "string",
-                  "const": "DDLA/ADF"
-                },
-                {
-                  "type": "string",
-                  "const": "TABL/DT"
-                },
-                {
-                  "type": "string",
-                  "const": "TABL/DS"
-                },
-                {
-                  "type": "string",
-                  "const": "SRVD/SRV"
-                },
-                {
-                  "type": "string",
-                  "const": "AUTH"
-                },
-                {
-                  "type": "string",
-                  "const": "DTEL/DE"
-                },
-                {
-                  "type": "string",
-                  "const": "DOMA/DD"
-                },
-                {
-                  "type": "string",
-                  "const": "SUSO/B"
-                },
-                {
-                  "type": "string",
-                  "const": "MSAG/N"
-                }
-              ]
-            },
-            "packagename": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
               "type": "string",
-              "maxLength": 1048576
+              "const": "active"
             },
-            "objname": {
+            {
               "type": "string",
-              "maxLength": 1048576
+              "const": "inactive"
             },
-            "description": {
+            {
               "type": "string",
-              "maxLength": 1048576
+              "const": "workingArea"
             }
-          },
-          "required": ["objtype", "packagename", "objname", "description"],
-          "additionalProperties": true
+          ]
         },
-        {
-          "type": "object",
-          "properties": {
-            "objtype": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "const": "FUGR/FF"
-                },
-                {
-                  "type": "string",
-                  "const": "FUGR/I"
-                }
-              ]
-            },
-            "fugrname": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "objname": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "description": {
-              "type": "string",
-              "maxLength": 1048576
-            }
-          },
-          "required": ["objtype", "fugrname", "objname", "description"],
-          "additionalProperties": true
+        "gitUser": {
+          "type": "string",
+          "maxLength": 1048576
         },
-        {
-          "type": "object",
-          "properties": {
-            "objtype": {
-              "type": "string",
-              "const": "DEVC/K"
-            },
-            "packagename": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "swcomp": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "transportLayer": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "packagetype": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "const": "development"
-                },
-                {
-                  "type": "string",
-                  "const": "structure"
-                },
-                {
-                  "type": "string",
-                  "const": "main"
-                }
-              ]
-            },
-            "objname": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "description": {
-              "type": "string",
-              "maxLength": 1048576
-            }
-          },
-          "required": [
-            "objtype",
-            "packagename",
-            "swcomp",
-            "transportLayer",
-            "packagetype",
-            "objname",
-            "description"
-          ],
-          "additionalProperties": true
-        },
-        {
-          "type": "object",
-          "properties": {
-            "objtype": {
-              "type": "string",
-              "const": "SRVB/SVB"
-            },
-            "serviceBindingVersion": {
-              "type": "string",
-              "const": "ODATA\\V2"
-            },
-            "serviceDefinition": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "package": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "objname": {
-              "type": "string",
-              "maxLength": 1048576
-            },
-            "description": {
-              "type": "string",
-              "maxLength": 1048576
-            }
-          },
-          "required": [
-            "objtype",
-            "serviceBindingVersion",
-            "serviceDefinition",
-            "package",
-            "objname",
-            "description"
-          ],
-          "additionalProperties": true
+        "gitPassword": {
+          "type": "string",
+          "maxLength": 1048576
         }
-      ]
-    }
-  },
-  "createObject": {
-    "objtype": {
-      "anyOf": [
-        {
-          "type": "string",
-          "const": "DEVC/K"
-        },
-        {
-          "type": "string",
-          "const": "PROG/P"
-        },
-        {
-          "type": "string",
-          "const": "FUGR/F"
-        },
-        {
-          "type": "string",
-          "const": "CLAS/OC"
-        },
-        {
-          "type": "string",
-          "const": "INTF/OI"
-        },
-        {
-          "type": "string",
-          "const": "PROG/I"
-        },
-        {
-          "type": "string",
-          "const": "DCLS/DL"
-        },
-        {
-          "type": "string",
-          "const": "DDLS/DF"
-        },
-        {
-          "type": "string",
-          "const": "DDLX/EX"
-        },
-        {
-          "type": "string",
-          "const": "DDLA/ADF"
-        },
-        {
-          "type": "string",
-          "const": "TABL/DT"
-        },
-        {
-          "type": "string",
-          "const": "TABL/DS"
-        },
-        {
-          "type": "string",
-          "const": "SRVD/SRV"
-        },
-        {
-          "type": "string",
-          "const": "AUTH"
-        },
-        {
-          "type": "string",
-          "const": "DTEL/DE"
-        },
-        {
-          "type": "string",
-          "const": "DOMA/DD"
-        },
-        {
-          "type": "string",
-          "const": "SUSO/B"
-        },
-        {
-          "type": "string",
-          "const": "MSAG/N"
-        },
-        {
-          "type": "string",
-          "const": "FUGR/FF"
-        },
-        {
-          "type": "string",
-          "const": "FUGR/I"
-        },
-        {
-          "type": "string",
-          "const": "SRVB/SVB"
-        }
-      ]
-    },
-    "name": {
-      "type": "string",
-      "maxLength": 1048576
-    },
-    "parentName": {
-      "type": "string",
-      "maxLength": 1048576
-    },
-    "description": {
-      "type": "string",
-      "maxLength": 1048576
-    },
-    "parentPath": {
-      "type": "string",
-      "maxLength": 1048576
-    },
-    "responsible": {
-      "type": "string",
-      "maxLength": 1048576
-    },
-    "transport": {
-      "type": "string",
-      "maxLength": 1048576
+      },
+      "required": [],
+      "additionalProperties": true
     }
   },
   "getObjectSource": {
@@ -3072,7 +3302,10 @@
               "maximum": 9007199254740991
             }
           },
-          "required": ["line", "column"],
+          "required": [
+            "line",
+            "column"
+          ],
           "additionalProperties": true
         },
         "end": {
@@ -3089,11 +3322,17 @@
               "maximum": 9007199254740991
             }
           },
-          "required": ["line", "column"],
+          "required": [
+            "line",
+            "column"
+          ],
           "additionalProperties": true
         }
       },
-      "required": ["start", "end"],
+      "required": [
+        "start",
+        "end"
+      ],
       "additionalProperties": true
     }
   },
@@ -3185,7 +3424,10 @@
                           "maximum": 9007199254740991
                         }
                       },
-                      "required": ["line", "column"],
+                      "required": [
+                        "line",
+                        "column"
+                      ],
                       "additionalProperties": true
                     },
                     "end": {
@@ -3202,11 +3444,17 @@
                           "maximum": 9007199254740991
                         }
                       },
-                      "required": ["line", "column"],
+                      "required": [
+                        "line",
+                        "column"
+                      ],
                       "additionalProperties": true
                     }
                   },
-                  "required": ["start", "end"],
+                  "required": [
+                    "start",
+                    "end"
+                  ],
                   "additionalProperties": true
                 },
                 "hashparms": {
@@ -3219,7 +3467,10 @@
                   }
                 }
               },
-              "required": ["uri", "range"],
+              "required": [
+                "uri",
+                "range"
+              ],
               "additionalProperties": true
             },
             "transport": {
@@ -3293,7 +3544,10 @@
                                 "line": {},
                                 "column": {}
                               },
-                              "required": ["line", "column"],
+                              "required": [
+                                "line",
+                                "column"
+                              ],
                               "additionalProperties": true
                             },
                             "end": {
@@ -3302,11 +3556,17 @@
                                 "line": {},
                                 "column": {}
                               },
-                              "required": ["line", "column"],
+                              "required": [
+                                "line",
+                                "column"
+                              ],
                               "additionalProperties": true
                             }
                           },
-                          "required": ["start", "end"],
+                          "required": [
+                            "start",
+                            "end"
+                          ],
                           "additionalProperties": true
                         },
                         "contentOld": {
@@ -3318,7 +3578,11 @@
                           "maxLength": 1048576
                         }
                       },
-                      "required": ["rangeFragment", "contentOld", "contentNew"],
+                      "required": [
+                        "rangeFragment",
+                        "contentOld",
+                        "contentNew"
+                      ],
                       "additionalProperties": true
                     },
                     "maxItems": 1000
@@ -3465,7 +3729,11 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["name", "resumable", "userContent"],
+            "required": [
+              "name",
+              "resumable",
+              "userContent"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -3530,7 +3798,10 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 },
                 "end": {
@@ -3547,11 +3818,17 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 }
               },
-              "required": ["start", "end"],
+              "required": [
+                "start",
+                "end"
+              ],
               "additionalProperties": true
             },
             "hashparms": {
@@ -3564,7 +3841,10 @@
               }
             }
           },
-          "required": ["uri", "range"],
+          "required": [
+            "uri",
+            "range"
+          ],
           "additionalProperties": true
         },
         "transport": {
@@ -3646,7 +3926,10 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         },
                         "end": {
@@ -3663,11 +3946,17 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         }
                       },
-                      "required": ["start", "end"],
+                      "required": [
+                        "start",
+                        "end"
+                      ],
                       "additionalProperties": true
                     },
                     "contentOld": {
@@ -3679,7 +3968,11 @@
                       "maxLength": 1048576
                     }
                   },
-                  "required": ["rangeFragment", "contentOld", "contentNew"],
+                  "required": [
+                    "rangeFragment",
+                    "contentOld",
+                    "contentNew"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
@@ -3812,7 +4105,10 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 },
                 "end": {
@@ -3829,11 +4125,17 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 }
               },
-              "required": ["start", "end"],
+              "required": [
+                "start",
+                "end"
+              ],
               "additionalProperties": true
             },
             "hashparms": {
@@ -3846,7 +4148,10 @@
               }
             }
           },
-          "required": ["uri", "range"],
+          "required": [
+            "uri",
+            "range"
+          ],
           "additionalProperties": true
         },
         "affectedObjects": {
@@ -3896,7 +4201,10 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         },
                         "end": {
@@ -3913,11 +4221,17 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         }
                       },
-                      "required": ["start", "end"],
+                      "required": [
+                        "start",
+                        "end"
+                      ],
                       "additionalProperties": true
                     },
                     "contentOld": {
@@ -3929,7 +4243,11 @@
                       "maxLength": 1048576
                     }
                   },
-                  "required": ["rangeFragment", "contentOld", "contentNew"],
+                  "required": [
+                    "rangeFragment",
+                    "contentOld",
+                    "contentNew"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
@@ -4049,7 +4367,10 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 },
                 "end": {
@@ -4066,11 +4387,17 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["line", "column"],
+                  "required": [
+                    "line",
+                    "column"
+                  ],
                   "additionalProperties": true
                 }
               },
-              "required": ["start", "end"],
+              "required": [
+                "start",
+                "end"
+              ],
               "additionalProperties": true
             },
             "hashparms": {
@@ -4083,7 +4410,10 @@
               }
             }
           },
-          "required": ["uri", "range"],
+          "required": [
+            "uri",
+            "range"
+          ],
           "additionalProperties": true
         },
         "affectedObjects": {
@@ -4133,7 +4463,10 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         },
                         "end": {
@@ -4150,11 +4483,17 @@
                               "maximum": 9007199254740991
                             }
                           },
-                          "required": ["line", "column"],
+                          "required": [
+                            "line",
+                            "column"
+                          ],
                           "additionalProperties": true
                         }
                       },
-                      "required": ["start", "end"],
+                      "required": [
+                        "start",
+                        "end"
+                      ],
                       "additionalProperties": true
                     },
                     "contentOld": {
@@ -4166,7 +4505,11 @@
                       "maxLength": 1048576
                     }
                   },
-                  "required": ["rangeFragment", "contentOld", "contentNew"],
+                  "required": [
+                    "rangeFragment",
+                    "contentOld",
+                    "contentNew"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
@@ -4720,13 +5063,20 @@
                     "maxLength": 1048576
                   }
                 },
-                "required": ["href", "rel"],
+                "required": [
+                  "href",
+                  "rel"
+                ],
                 "additionalProperties": true
               },
               "maxItems": 1000
             }
           },
-          "required": ["objectUrl", "metaData", "links"],
+          "required": [
+            "objectUrl",
+            "metaData",
+            "links"
+          ],
           "additionalProperties": true
         },
         {
@@ -4920,7 +5270,10 @@
                     "maxLength": 1048576
                   }
                 },
-                "required": ["href", "rel"],
+                "required": [
+                  "href",
+                  "rel"
+                ],
                 "additionalProperties": true
               },
               "maxItems": 1000
@@ -4968,10 +5321,6 @@
                     "anyOf": [
                       {
                         "type": "string",
-                        "const": "main"
-                      },
-                      {
-                        "type": "string",
                         "const": "definitions"
                       },
                       {
@@ -4985,6 +5334,10 @@
                       {
                         "type": "string",
                         "const": "testclasses"
+                      },
+                      {
+                        "type": "string",
+                        "const": "main"
                       }
                     ]
                   },
@@ -5015,7 +5368,10 @@
                           "maxLength": 1048576
                         }
                       },
-                      "required": ["href", "rel"],
+                      "required": [
+                        "href",
+                        "rel"
+                      ],
                       "additionalProperties": true
                     },
                     "maxItems": 1000
@@ -5038,17 +5394,17 @@
               "maxItems": 1000
             }
           },
-          "required": ["objectUrl", "metaData", "includes"],
+          "required": [
+            "objectUrl",
+            "metaData",
+            "includes"
+          ],
           "additionalProperties": true
         }
       ]
     },
     "clsInclude": {
       "anyOf": [
-        {
-          "type": "string",
-          "const": "main"
-        },
         {
           "type": "string",
           "const": "definitions"
@@ -5064,6 +5420,10 @@
         {
           "type": "string",
           "const": "testclasses"
+        },
+        {
+          "type": "string",
+          "const": "main"
         }
       ]
     }
@@ -5208,7 +5568,11 @@
               "maxLength": 1048576
             }
           },
-          "required": ["uri", "type", "name"],
+          "required": [
+            "uri",
+            "type",
+            "name"
+          ],
           "additionalProperties": true
         },
         "links": {
@@ -5238,7 +5602,10 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["href", "rel"],
+            "required": [
+              "href",
+              "rel"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000
@@ -5281,7 +5648,11 @@
                     "maxLength": 1048576
                   }
                 },
-                "required": ["uri", "type", "name"],
+                "required": [
+                  "uri",
+                  "type",
+                  "name"
+                ],
                 "additionalProperties": true
               }
             },
@@ -5319,11 +5690,18 @@
                   "maxLength": 1048576
                 }
               },
-              "required": ["name"],
+              "required": [
+                "name"
+              ],
               "additionalProperties": true
             }
           },
-          "required": ["type", "version", "category", "implementation"],
+          "required": [
+            "type",
+            "version",
+            "category",
+            "implementation"
+          ],
           "additionalProperties": true
         }
       },
@@ -6342,7 +6720,13 @@
                       "maxLength": 1048576
                     }
                   },
-                  "required": ["kind", "severity", "details", "stack", "title"],
+                  "required": [
+                    "kind",
+                    "severity",
+                    "details",
+                    "stack",
+                    "title"
+                  ],
                   "additionalProperties": true
                 },
                 "maxItems": 1000
@@ -6447,7 +6831,13 @@
                 "maxLength": 1048576
               }
             },
-            "required": ["kind", "severity", "details", "stack", "title"],
+            "required": [
+              "kind",
+              "severity",
+              "details",
+              "stack",
+              "title"
+            ],
             "additionalProperties": true
           },
           "maxItems": 1000

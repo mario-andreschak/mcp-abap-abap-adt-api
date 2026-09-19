@@ -3,6 +3,8 @@ import { McpError, ErrorCode } from "../lib/errors.js";
 import { BaseHandler } from "./BaseHandler.js";
 import type { ToolDefinition } from "../types/tools.js";
 import { session_types } from "abap-adt-api";
+import fs from "fs";
+import path from "path";
 
 export class ObjectSourceHandlers extends BaseHandler {
   getTools(): ToolDefinition[] {
@@ -34,16 +36,41 @@ export class ObjectSourceHandlers extends BaseHandler {
       },
       {
         name: "setObjectSource",
-        description: "Sets source code for ABAP objects",
+        description:
+          "Sets source code for ABAP objects. Pass source inline, or filePath to read the source from a local file (for large files - bypasses context).",
         inputSchema: {
           type: "object",
           properties: {
             objectSourceUrl: { type: "string" },
-            source: { type: "string" },
+            source: {
+              type: "string",
+              description: "Source code to set (inline). Mutually exclusive with filePath.",
+              optional: true,
+            },
+            filePath: {
+              type: "string",
+              description:
+                "Local file path to read source from (for large files - bypasses context). Mutually exclusive with source.",
+              optional: true,
+            },
             lockHandle: { type: "string" },
             transport: { type: "string" },
           },
-          required: ["objectSourceUrl", "source", "lockHandle"],
+          required: ["objectSourceUrl", "lockHandle"],
+        },
+      },
+      {
+        name: "downloadObjectSource",
+        description:
+          "Downloads ABAP source code to a local file to avoid context overflow",
+        inputSchema: {
+          type: "object",
+          properties: {
+            objectSourceUrl: { type: "string" },
+            filePath: { type: "string" },
+            options: { type: "string" },
+          },
+          required: ["objectSourceUrl", "filePath"],
         },
       },
     ];
@@ -53,6 +80,8 @@ export class ObjectSourceHandlers extends BaseHandler {
     switch (toolName) {
       case "getObjectSource":
         return this.handleGetObjectSource(args);
+      case "downloadObjectSource":
+        return this.handleDownloadObjectSource(args);
       case "setObjectSource":
         return this.handleSetObjectSource(args);
       default:
@@ -60,6 +89,38 @@ export class ObjectSourceHandlers extends BaseHandler {
           ErrorCode.MethodNotFound,
           `Unknown object source tool: ${toolName}`,
         );
+    }
+  }
+
+  async handleDownloadObjectSource(args: any): Promise<any> {
+    const startTime = performance.now();
+    try {
+      const fullSource = await this.adtclient.getObjectSource(
+        args.objectSourceUrl,
+        args.options,
+      );
+      const dir = path.dirname(args.filePath);
+      if (dir && !fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(args.filePath, fullSource, "utf8");
+      this.trackRequest(startTime, true);
+      const totalLines = fullSource.split("\n").length;
+      return {
+        content: [
+          {
+            type: "text",
+            text: stringify({
+              status: "success",
+              savedTo: args.filePath,
+              totalLines,
+            }),
+          },
+        ],
+      };
+    } catch (error: any) {
+      this.trackRequest(startTime, false);
+      throw error;
     }
   }
 
@@ -119,17 +180,46 @@ export class ObjectSourceHandlers extends BaseHandler {
   async handleSetObjectSource(args: any): Promise<any> {
     const startTime = performance.now();
     try {
+      // Exactly one of source (inline) or filePath (local file) must be provided.
+      if (!args.source && !args.filePath) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          "Either source or filePath must be provided",
+        );
+      }
+      if (args.source && args.filePath) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          "Cannot use both source and filePath. Use one or the other.",
+        );
+      }
+
+      let sourceContent = args.source;
+      if (args.filePath) {
+        try {
+          sourceContent = fs.readFileSync(args.filePath, "utf-8");
+        } catch (err: any) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            `Failed to read file ${args.filePath}: ${err.message}`,
+          );
+        }
+        this.logger.info("Source loaded from file", {
+          filePath: args.filePath,
+        });
+      }
+
       // dropSession/logout reset the client to stateless; writing source requires a stateful session
       this.adtclient.stateful = session_types.stateful;
       await this.adtclient.setObjectSource(
         args.objectSourceUrl,
-        args.source,
+        sourceContent,
         args.lockHandle,
         args.transport,
       );
       // Cache the just-written source so a follow-up syntaxCheckCode can reuse it
       // without the caller re-sending it (issue #2).
-      this.sourceCache.set(args.objectSourceUrl, args.source);
+      this.sourceCache.set(args.objectSourceUrl, sourceContent);
       this.trackRequest(startTime, true);
       return {
         content: [
@@ -138,6 +228,9 @@ export class ObjectSourceHandlers extends BaseHandler {
             text: stringify({
               status: "success",
               updated: true,
+              sourceLoadedFrom: args.filePath
+                ? `File: ${args.filePath}`
+                : "Context (direct source)",
             }),
           },
         ],

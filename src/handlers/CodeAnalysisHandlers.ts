@@ -1,3 +1,4 @@
+import { readFile } from "fs/promises";
 import { stringify } from "../lib/results.js";
 import { McpError, ErrorCode } from "../lib/errors.js";
 import { BaseHandler } from "./BaseHandler.js";
@@ -10,7 +11,7 @@ export class CodeAnalysisHandlers extends BaseHandler {
       {
         name: "syntaxCheckCode",
         description:
-          'Perform ABAP syntax check. Provide the source in "code", or omit it to reuse the source last read/written for "url" via getObjectSource/setObjectSource (cached this session).',
+          'Perform ABAP syntax check. Provide the source in "code", read it from a local "filePath" (for large files - bypasses context), or omit both to reuse the source last read/written for "url" via getObjectSource/setObjectSource (cached this session).',
         inputSchema: {
           type: "object",
           properties: {
@@ -18,6 +19,12 @@ export class CodeAnalysisHandlers extends BaseHandler {
               type: "string",
               description:
                 'The ABAP source to check. Optional if the source for "url" was already read or written this session.',
+              optional: true,
+            },
+            filePath: {
+              type: "string",
+              description:
+                'Local file path to read the source from (for large files - bypasses context). Mutually exclusive with "code".',
               optional: true,
             },
             url: { type: "string", optional: true },
@@ -263,12 +270,29 @@ export class CodeAnalysisHandlers extends BaseHandler {
     // before the try so a missing-source error keeps its InvalidParams code.
     let code = args?.code;
     let usedCachedSource = false;
+    if (code !== undefined && args?.filePath) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        'Cannot use both "code" and "filePath". Use one or the other.',
+      );
+    }
+    if (code === undefined && args?.filePath) {
+      // Read the source from a local file (for large files - bypasses context).
+      try {
+        code = await readFile(args.filePath, "utf-8");
+      } catch (err: any) {
+        throw new McpError(
+          ErrorCode.InvalidParams,
+          `Failed to read file '${args.filePath}': ${err.message}`,
+        );
+      }
+    }
     if (code === undefined) {
       const cached = this.sourceCache.get(args.url);
       if (cached === undefined) {
         throw new McpError(
           ErrorCode.InvalidParams,
-          `No source provided and none cached for '${args.url}'. Pass "code", or call getObjectSource/setObjectSource for this URL first.`,
+          `No source provided and none cached for '${args.url}'. Pass "code" or "filePath", or call getObjectSource/setObjectSource for this URL first.`,
         );
       }
       code = cached;

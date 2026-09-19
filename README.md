@@ -11,7 +11,7 @@ Use Node22.22.2+ or24.15.0+. Run `npm ci` and `npm run build`, then configure yo
   "mcpServers": {
     "abap-adt": {
       "command": "node",
-      "args": ["/absolute/path/mcp-abap-abap-adt-api/dist/index.js"],
+      "args": ["/absolute/path/to/this/repo/dist/index.js"],
       "env": {
         "SAP_URL": "https://sap.example.invalid:44300",
         "SAP_USER": "YOUR_USER",

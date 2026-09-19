@@ -99,7 +99,8 @@ export async function verify(
         send("notifications/initialized", {}, null);
       }
       const catalog = (await request("tools/list", {}, 2)).result;
-      assert.equal(catalog.tools.length, 128);
+      // 129 handler tools (126 upstream + 3 new) + healthcheck + initialize
+      assert.equal(catalog.tools.length, 131);
       if (era === "modern") {
         assert.equal(catalog.resultType, "complete");
         assert.ok("ttlMs" in catalog && "cacheScope" in catalog);
@@ -184,7 +185,7 @@ export async function verify(
         stderr,
       );
       console.log(
-        `${era}: actual128tool catalog, SAP workflow/errors/ID0/EOF passed (offline=${offline})`,
+        `${era}: actual131tool catalog, SAP workflow/errors/ID0/EOF passed (offline=${offline})`,
       );
     } finally {
       clearTimeout(deadline);

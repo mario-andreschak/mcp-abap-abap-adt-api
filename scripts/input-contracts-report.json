@@ -434,6 +434,76 @@
     "type": "string | undefined"
   },
   {
+    "tool": "setDomainProperties",
+    "field": "domainUrl",
+    "method": "setDomainProperties",
+    "parameter": "domainUrl",
+    "type": "string"
+  },
+  {
+    "tool": "setDomainProperties",
+    "field": "properties",
+    "method": "setDomainProperties",
+    "parameter": "properties",
+    "type": "DomainProperties"
+  },
+  {
+    "tool": "setDomainProperties",
+    "field": "metaData",
+    "method": "setDomainProperties",
+    "parameter": "metaData",
+    "type": "DomainMetaData"
+  },
+  {
+    "tool": "setDomainProperties",
+    "field": "lockHandle",
+    "method": "setDomainProperties",
+    "parameter": "lockHandle",
+    "type": "string"
+  },
+  {
+    "tool": "setDomainProperties",
+    "field": "transport",
+    "method": "setDomainProperties",
+    "parameter": "transport",
+    "type": "string | undefined"
+  },
+  {
+    "tool": "setDataElementProperties",
+    "field": "dataElementUrl",
+    "method": "setDataElementProperties",
+    "parameter": "dataElementUrl",
+    "type": "string"
+  },
+  {
+    "tool": "setDataElementProperties",
+    "field": "properties",
+    "method": "setDataElementProperties",
+    "parameter": "properties",
+    "type": "DataElementProperties"
+  },
+  {
+    "tool": "setDataElementProperties",
+    "field": "metaData",
+    "method": "setDataElementProperties",
+    "parameter": "metaData",
+    "type": "DataElementMetaData"
+  },
+  {
+    "tool": "setDataElementProperties",
+    "field": "lockHandle",
+    "method": "setDataElementProperties",
+    "parameter": "lockHandle",
+    "type": "string"
+  },
+  {
+    "tool": "setDataElementProperties",
+    "field": "transport",
+    "method": "setDataElementProperties",
+    "parameter": "transport",
+    "type": "string | undefined"
+  },
+  {
     "tool": "debuggerListeners",
     "field": "debuggingMode",
     "method": "debuggerListeners",
@@ -1176,60 +1246,18 @@
     "type": "string"
   },
   {
-    "tool": "validateNewObject",
+    "tool": "downloadObjectSource",
+    "field": "objectSourceUrl",
+    "method": "getObjectSource",
+    "parameter": "objectSourceUrl",
+    "type": "string"
+  },
+  {
+    "tool": "downloadObjectSource",
     "field": "options",
-    "method": "validateNewObject",
+    "method": "getObjectSource",
     "parameter": "options",
-    "type": "ValidateOptions"
-  },
-  {
-    "tool": "createObject",
-    "field": "objtype",
-    "method": "createObject",
-    "parameter": "objtype",
-    "type": "CreatableTypeIds"
-  },
-  {
-    "tool": "createObject",
-    "field": "name",
-    "method": "createObject",
-    "parameter": "name",
-    "type": "string"
-  },
-  {
-    "tool": "createObject",
-    "field": "parentName",
-    "method": "createObject",
-    "parameter": "parentName",
-    "type": "string"
-  },
-  {
-    "tool": "createObject",
-    "field": "description",
-    "method": "createObject",
-    "parameter": "description",
-    "type": "string"
-  },
-  {
-    "tool": "createObject",
-    "field": "parentPath",
-    "method": "createObject",
-    "parameter": "parentPath",
-    "type": "string"
-  },
-  {
-    "tool": "createObject",
-    "field": "responsible",
-    "method": "createObject",
-    "parameter": "responsible",
-    "type": "string | undefined"
-  },
-  {
-    "tool": "createObject",
-    "field": "transport",
-    "method": "createObject",
-    "parameter": "transport",
-    "type": "string | undefined"
+    "type": "ObjectSourceOptions | undefined"
   },
   {
     "tool": "getObjectSource",
